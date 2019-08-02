@@ -11,7 +11,6 @@ namespace Server.Mobiles
 {
 	public class BaseTalismanSummon : BaseCreature
 	{
-        private bool m_LastHidden;
         private long m_NextMove;
 
         private DateTime m_SeperationStart;
@@ -74,9 +73,9 @@ namespace Server.Mobiles
                 m_SeperationStart = DateTime.MinValue;
             }
 
-            int range = (RangeHome / 2);
+            int range = 4;
 
-            if (!InRange(ControlMaster.Location, RangeHome))
+            if (!InRange(ControlMaster.Location, RangeHome) && InLOS(ControlMaster))
             {
                 Point3D loc = Point3D.Zero;
 
@@ -105,6 +104,8 @@ namespace Server.Mobiles
                         SetLocation(loc, true);
                     }
                 }
+
+                return false;
             }
 
             return true;

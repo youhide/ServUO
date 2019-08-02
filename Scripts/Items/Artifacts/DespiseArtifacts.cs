@@ -134,6 +134,7 @@ namespace Server.Items
 			SkillBonuses.SetValues( 0, SkillName.Archery, 5.0 );
 			Attributes.ReflectPhysical = 5;
 			Attributes.AttackChance = 5;
+            LowerAmmoCost = 30;
 			
 			switch(Utility.Random(5))
 			{
@@ -169,6 +170,12 @@ namespace Server.Items
 		
 		public override int InitMinHits{ get{ return 255; } }
 		public override int InitMaxHits{ get{ return 255; } }
+
+        public override int PhysicalResistance { get { return PhysicalBonus; } }
+        public override int FireResistance { get { return FireBonus; } }
+        public override int ColdResistance { get { return ColdBonus; } }
+        public override int PoisonResistance { get { return PoisonBonus; } }
+        public override int EnergyResistance { get { return EnergyBonus; } }
 
         [Constructable]
 		public UnforgivenVeil()

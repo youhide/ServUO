@@ -89,6 +89,9 @@ namespace Server.Engines.UOStore
 
             // Character
             cat = StoreCategory.Character;
+
+            Register<HABPromotionalToken>(new TextDefinition[] { 1158741, 1156615 }, 1158740, 0x2AAA, 0, 0, 600, cat);
+            Register<MysticalPolymorphTotem>(1158780, 1158781, 0xA276, 0, 0, 600, cat);
             //Register<DeluxeStarterPackToken>(1158368, 1158369, 0, 0x9CCB, 0, 2000, cat);
             Register<GreenGoblinStatuette>(1125133, 1158015, 0xA095, 0, 0, 600, cat);
             Register<GreyGoblinStatuette>(1125135, 1158015, 0xA097, 0, 0, 600, cat);
@@ -185,6 +188,9 @@ namespace Server.Engines.UOStore
 
             // decorations
             cat = StoreCategory.Decorations;
+            Register<DecorativeKitchenSet>(1158970, 1158971, 0, 0x9CE8, 0, 1200, cat);
+            Register<SquirrelMailbox>(1158859, 1158857, 0xA207, 0, 0, 400, cat);
+            Register<BarrelMailbox>(1158859, 1158857, 0xA1F7, 0, 0, 400, cat);
             Register<DecorativeBlackwidowDeed>(1157897, 1157898, 0, 0x9CD7, 0, 600, cat);
             Register<HildebrandtDragonRugDeed>(1157889, 1157890, 0, 0x9CD8, 0, 700, cat);
             Register<SmallWorldTreeRugAddonDeed>(1157206, 1157898, 0, 0x9CBA, 0, 300, cat);

@@ -485,6 +485,12 @@ namespace Server
         Pillage = 14,
         Spawn = 15
     }
+
+    public enum DFAlgorithm
+    {
+        Standard,
+        PainSpike
+    }
 	#endregion
 
 	[Serializable]
@@ -512,6 +518,8 @@ namespace Server
 	public delegate bool AllowBeneficialHandler(Mobile from, Mobile target);
 
 	public delegate bool AllowHarmfulHandler(Mobile from, IDamageable target);
+
+    public delegate void FatigueHandler(Mobile m, int damage, DFAlgorithm df);
 
 	public delegate Container CreateCorpseHandler(
 		Mobile from, HairInfo hair, FacialHairInfo facialhair, List<Item> initialContent, List<Item> equipedItems);
@@ -609,8 +617,9 @@ namespace Server
 
 		#region Handlers
 		public static AllowBeneficialHandler AllowBeneficialHandler { get; set; }
-
 		public static AllowHarmfulHandler AllowHarmfulHandler { get; set; }
+
+        public static FatigueHandler FatigueHandler { get; set; }
 
 		private static SkillCheckTargetHandler m_SkillCheckTargetHandler;
 		private static SkillCheckLocationHandler m_SkillCheckLocationHandler;
@@ -859,6 +868,8 @@ namespace Server
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool CharacterOut { get; set; }
+
+        public DFAlgorithm DFA { get; set; } 
 
         protected virtual void OnRaceChange(Race oldRace)
 		{ }
@@ -1536,9 +1547,19 @@ namespace Server
 			{
 				return true;
 			}
-			else if (target is Item && ((Item)target).RootParent == this)
+			else if (target is Item)
 			{
-				return true;
+                var item = (Item)target;
+
+                if (item.RootParent == this)
+                {
+                    return true;
+                }
+
+                if (item.Parent is Container)
+                {
+                    return InLOS(item.Parent);
+                }
 			}
 
 			return m_Map.LineOfSight(this, target);
@@ -4531,23 +4552,20 @@ namespace Server
 					else if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(item.GetWorldLocation(), 2))
 					{
 						reject = LRReason.OutOfRange;
-					}
+                    }
 					else if (!from.CanSee(item) || !from.InLOS(item))
 					{
 						reject = LRReason.OutOfSight;
-					}
+                    }
 					else if (!item.VerifyMove(from))
 					{
 						reject = LRReason.CannotLift;
 					}
-					#region Mondain's Legacy
 					else if (item.QuestItem && amount != item.Amount && !from.IsStaff())
 					{
 						reject = LRReason.Inspecific;
 						from.SendLocalizedMessage(1074868); // Stacks of quest items cannot be unstacked.
 					}
-					#endregion
-
 					else if (!item.IsAccessibleTo(from))
 					{
 						reject = LRReason.CannotLift;
@@ -4760,7 +4778,6 @@ namespace Server
 
 			oldItem.Amount = amount;
 			oldItem.OnAfterDuped(item);
-            //item.GridLocation = oldItem.GridLocation;
 
 			if (oldItem.Parent is Mobile)
 			{
@@ -5615,7 +5632,7 @@ namespace Server
 
 				if (m != null && informMount)
 				{
-					m.OnRiderDamaged(amount, from, newHits < 0);
+					m.OnRiderDamaged(from, ref amount, newHits < 0);
 				}
 
 				if (newHits < 0)
@@ -5631,6 +5648,8 @@ namespace Server
 				}
 				else
 				{
+                    FatigueHandler(this, amount, DFA);
+
 					Hits = newHits;
 				}
 			}
@@ -7151,7 +7170,8 @@ namespace Server
 					}
 
 					OnFameChange(oldValue);
-				}
+                    EventSink.InvokeFameChange(new FameChangeEventArgs(this, oldValue, m_Fame));
+                }
 			}
 		}
 
@@ -7170,7 +7190,8 @@ namespace Server
 				{
 					m_Karma = value;
 					OnKarmaChange(old);
-				}
+                    EventSink.InvokeKarmaChange(new KarmaChangeEventArgs(this, old, m_Karma));
+                }
 			}
 		}
 
@@ -7390,7 +7411,7 @@ namespace Server
 
 			if (m_Map != null && ns != null)
 			{
-				var eable = m_Map.GetObjectsInRange(m_Location, Core.GlobalMaxUpdateRange);
+                var eable = m_Map.GetObjectsInRange(m_Location, Core.GlobalRadarRange - 4);
 
 				foreach (IEntity o in eable)
 				{
@@ -7660,7 +7681,7 @@ namespace Server
 
 			if (m_Map != null && ns != null)
 			{
-				var eable = m_Map.GetObjectsInRange(m_Location);
+                var eable = m_Map.GetObjectsInRange(m_Location, Core.GlobalRadarRange);
 
 				foreach (var o in eable)
 				{
@@ -7997,6 +8018,10 @@ namespace Server
 
                     return false;
                 }
+                else if (!((Mobile)target).CanBeHarmedBy(this, message))
+                {
+                    return false;
+                }
             }
 
 			if (target == this)
@@ -8018,6 +8043,11 @@ namespace Server
 
 			return true;
 		}
+
+        public virtual bool CanBeHarmedBy(Mobile from, bool message)
+        {
+            return true;
+        }
 
 		public virtual bool IsHarmfulCriminal(IDamageable target)
 		{
@@ -9532,10 +9562,8 @@ namespace Server
 		{
 			if (poison != null)
 			{
-				#region Mondain's Legacy
 				LocalOverheadMessage(MessageType.Regular, 0x21, 1042857 + (poison.RealLevel * 2));
 				NonlocalOverheadMessage(MessageType.Regular, 0x21, 1042858 + (poison.RealLevel * 2), Name);
-				#endregion
 			}
 		}
 
@@ -9823,7 +9851,7 @@ namespace Server
 		[CommandProperty(AccessLevel.Counselor, AccessLevel.Decorator)]
 		public Point3D Location { get { return m_Location; } set { SetLocation(value, true); } }
 
-		[CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
+        [CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
 		public Point3D LogoutLocation { get { return m_LogoutLocation; } set { m_LogoutLocation = value; } }
 
 		[CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
@@ -10114,7 +10142,10 @@ namespace Server
 					}
 
 					ClearFastwalkStack();
-				}
+
+                    EventSink.InvokeTeleportMovement(new TeleportMovementEventArgs(this, oldLocation, newLocation));
+
+                }
 
 				Map map = m_Map;
 
@@ -10145,7 +10176,7 @@ namespace Server
 					// Check to see if we are attached to a client
 					if (ourState != null)
 					{
-						var eeable = map.GetObjectsInRange(newLocation);
+                        var eeable = map.GetObjectsInRange(newLocation, Core.GlobalRadarRange);
 
 						// We are attached to a client, so it's a bit more complex. We need to send new items and people to ourself, and ourself to other clients
 						foreach (IEntity o in eeable)
@@ -12767,7 +12798,14 @@ namespace Server
 			{
 				if (m_StatCap != value)
 				{
+                    int old = m_StatCap;
+
 					m_StatCap = value;
+
+                    if (old != m_StatCap)
+                    {
+                        EventSink.InvokeStatCapChange(new StatCapChangeEventArgs(this, old, m_StatCap));
+                    }
 
 					Delta(MobileDelta.StatCap);
 				}

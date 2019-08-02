@@ -1,11 +1,14 @@
 using System;
-using Server;
 using System.Collections.Generic;
+
+using Server;
 using Server.Items;
 using Server.Mobiles;
 using Server.Targeting;
 using Server.Engines.Quests.Doom;
 using Server.Accounting;
+using Server.Engines.Craft;
+using Server.SkillHandlers;
 
 namespace Server.Engines.Points
 {
@@ -19,18 +22,25 @@ namespace Server.Engines.Points
 
         private TextDefinition m_Name = null;
 
+        public static bool Enabled { get; set; }
+
         public CleanUpBritanniaData()
         {
-            InitializeEntries();
-            PointsExchange = new Dictionary<string, double>();
+            Enabled = Core.ML;
+
+            if (Enabled)
+            {
+                InitializeEntries();
+                PointsExchange = new Dictionary<string, double>();
+            }
         }
 
         public static double GetPoints(Item item)
         {
-            double points = 0;
-
             if (item is IVvVItem && ((IVvVItem)item).IsVvVItem)
-                return points;
+                return 0;
+
+            double points = 0;
 
             Type type = item.GetType();
 
@@ -94,7 +104,7 @@ namespace Server.Engines.Points
                     else if (ps.Value == 120)
                         points = 2500;
                 }
-                else if (item is ScrollofTranscendence)
+                else if (item is ScrollOfTranscendence)
                 {
                     SpecialScroll sot = (SpecialScroll)item;
 
@@ -138,6 +148,10 @@ namespace Server.Engines.Points
                 {
                     BasePigmentsOfTokuno pigments = (BasePigmentsOfTokuno)item;
                     points = 500 * pigments.UsesRemaining;
+                }
+                else if (item is ICombatEquipment)
+                {
+                    points = GetPointsForEquipment(item);
                 }
 
                 if (item.LootType != LootType.Blessed && points < 100 && item is IShipwreckedItem && ((IShipwreckedItem)item).IsShipwreckedItem)
@@ -716,6 +730,79 @@ namespace Server.Engines.Points
             Entries[typeof(Lockpick)] = 0.10;
         }
 
+        public static int GetPointsForEquipment(Item item)
+        {
+            foreach (CraftSystem system in CraftSystem.Systems)
+            {
+                CraftItem crItem = null;
+
+                if (system != null && system.CraftItems != null)
+                {
+                    var type = item.GetType();
+
+                    if (type == typeof(SilverRing))
+                    {
+                        type = typeof(GoldRing);
+                    }
+                    else if (type == typeof(SilverBracelet))
+                    {
+                        type = typeof(GoldBracelet);
+                    }
+
+                    crItem = system.CraftItems.SearchFor(type);
+
+                    if (crItem != null && crItem.Resources != null)
+                    {
+                        CraftRes craftRes = crItem.Resources.GetAt(0);
+                        double amount = 1;
+
+                        if (craftRes != null)
+                        {
+                            amount = craftRes.Amount;
+                        }
+
+                        double award = 1;
+
+                        if (item is IResource)
+                        {
+                            switch (((IResource)item).Resource)
+                            {
+                                default: award = amount * .1; break;
+                                case CraftResource.DullCopper: award = amount * .47; break;
+                                case CraftResource.ShadowIron: award = amount * .73; break;
+                                case CraftResource.Copper: award = amount * 1.0; break;
+                                case CraftResource.Bronze: award = amount * 1.47; break;
+                                case CraftResource.Gold: award = amount * 2.5; break;
+                                case CraftResource.Agapite: award = amount * 5.0; break;
+                                case CraftResource.Verite: award = amount * 8.5; break;
+                                case CraftResource.Valorite: award = amount * 10; break;
+                                case CraftResource.SpinedLeather: award = amount * 0.5; break;
+                                case CraftResource.HornedLeather: award = amount * 1.0; break;
+                                case CraftResource.BarbedLeather: award = amount * 2.0; break;
+                                case CraftResource.OakWood: award = amount * .17; break;
+                                case CraftResource.AshWood: award = amount * .33; break;
+                                case CraftResource.YewWood: award = amount * .67; break;
+                                case CraftResource.Heartwood: award = amount * 1.0; break;
+                                case CraftResource.Bloodwood: award = amount * 2.17; break;
+                                case CraftResource.Frostwood: award = amount * 3.17; break;
+                            }
+                        }
+
+                        var weight = Imbuing.GetTotalWeight(item, -1, false, true);
+
+                        if (weight > 0)
+                        {
+                            award += weight / 30;
+                        }
+
+                        return (int)award;
+                    }
+                }
+            }
+
+            return 0;
+        }
+
         #region Points Exchange
 
         public Dictionary<string, double> PointsExchange { get; private set; }
@@ -798,11 +885,15 @@ namespace Server.Engines.Points
             base.Serialize(writer);
             writer.Write(0);
 
-            writer.Write(PointsExchange.Count);
-            foreach (var kvp in PointsExchange)
+            writer.Write(PointsExchange == null ? 0 : PointsExchange.Count);
+
+            if (PointsExchange != null)
             {
-                writer.Write(kvp.Key);
-                writer.Write(kvp.Value);
+                foreach (var kvp in PointsExchange)
+                {
+                    writer.Write(kvp.Key);
+                    writer.Write(kvp.Value);
+                }
             }
         }
 

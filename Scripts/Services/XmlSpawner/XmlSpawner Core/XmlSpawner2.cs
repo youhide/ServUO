@@ -2041,6 +2041,8 @@ namespace Server.Mobiles
 		{
 			// automatically turn off duped spawners
 			((XmlSpawner)newItem).Running = false;
+
+            base.OnAfterDuped(newItem);
 		}
 
 		public override void OnMapChange()
@@ -10028,7 +10030,6 @@ public static void _TraceEnd(int index)
 		// if a non-null mob argument is passed, then check the canswim and cantwalk props to determine valid placement
 		public bool CanFit(int x, int y, int z, int height, bool checkBlocksFit, bool checkMobiles, bool requireSurface, Mobile mob)
 		{
-
 			Map map = this.Map;
 
 			if (DebugThis)
@@ -10197,7 +10198,7 @@ public static void _TraceEnd(int index)
 			if (!Region.Find(new Point3D(x, y, z), this.Map).AllowSpawn())
 				return false;
 
-			return CanFit(x, y, z, 16, false, true, true, mob);
+			return Map.CanFit(x, y, z, 16, false, true, true, mob);
 		}
 
 		public bool HasRegionPoints(Region r)

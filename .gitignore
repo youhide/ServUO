@@ -23,6 +23,9 @@
 /drng64.dll
 /drng32.dll
 /libdrng.so
+NoCommit
+CUSTOM
+TheBox
 *.pdb
 *.exe
 *.exe.mdb

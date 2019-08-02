@@ -185,7 +185,7 @@ namespace Server
                 }
 
                 if (m != null)
-                    BaseFishPie.ScaleDamage(m, ref totalDamage, phys, fire, cold, pois, nrgy, direct);
+                    BaseFishPie.ScaleDamage(from, m, ref totalDamage, phys, fire, cold, pois, nrgy, direct);
 
                 if (Core.HS && ArmorPierce.IsUnderEffects(m))
                 {
@@ -273,33 +273,6 @@ namespace Server
             }
             #endregion
 
-            #region Dragon Barding
-            if ((from == null || !from.Player) && m.Player && m.Mount is SwampDragon)
-            {
-                SwampDragon pet = m.Mount as SwampDragon;
-
-                if (pet != null && pet.HasBarding)
-                {
-                    int percent = (pet.BardingExceptional ? 20 : 10);
-                    int absorbed = Scale(totalDamage, percent);
-
-                    totalDamage -= absorbed;
-					
-                    // Mondain's Legacy mod
-                    if (!(pet is ParoxysmusSwampDragon))
-                        pet.BardingHP -= absorbed;
-
-                    if (pet.BardingHP < 0)
-                    {
-                        pet.HasBarding = false;
-                        pet.BardingHP = 0;
-
-                        m.SendLocalizedMessage(1053031); // Your dragon's barding has been destroyed!
-                    }
-                }
-            }
-            #endregion
-
             #region Stygian Abyss
             //SHould this go in after or before dragon barding absorb?
             if (ignoreArmor)
@@ -371,8 +344,15 @@ namespace Server
             }
             #endregion
 
+            if (type <= DamageType.Ranged)
+            {
+                AttuneWeaponSpell.TryAbsorb(m, ref totalDamage);
+            }
+
             if (keepAlive && totalDamage > m.Hits)
+            {
                 totalDamage = m.Hits;
+            }
 
             if (from is BaseCreature && type <= DamageType.Ranged)
             {
@@ -400,6 +380,12 @@ namespace Server
             }
 
             totalDamage = m.Damage(totalDamage, from, true, false);
+
+            if (Core.SA && type == DamageType.Melee && from is BaseCreature &&
+                (m is PlayerMobile || (m is BaseCreature && !((BaseCreature)m).IsMonster)))
+            {
+                from.RegisterDamage(totalDamage / 4, m);
+            }
 
             SpiritSpeak.CheckDisrupt(m);
 
@@ -442,7 +428,7 @@ namespace Server
             {
                 if (context.Type == typeof(WraithFormSpell))
                 {
-                    int manaLeech = AOS.Scale(damageGiven, Math.Min(target.Mana, (5 + (int)((15 * from.Skills.SpiritSpeak.Value) / 100)))); // Wraith form gives 5-20% mana leech
+                    int manaLeech = AOS.Scale(damageGiven, Math.Min(target.Mana, (int)from.Skills.SpiritSpeak.Value / 5)); // Wraith form gives 5-20% mana leech
 
                     if (manaLeech != 0)
                     {
@@ -491,9 +477,9 @@ namespace Server
                 case 13: return Math.Min(4, AosAttributes.GetValue(from, AosAttribute.CastSpeed));
                 case 14: return Math.Min(40, AosAttributes.GetValue(from, AosAttribute.LowerManaCost)) + BaseArmor.GetInherentLowerManaCost(from);
                 
-                case 15: return RegenRates.HitPointRegen(from); // HP   REGEN
-                case 16: return RegenRates.StamRegen(from); // Stam REGEN
-                case 17: return RegenRates.ManaRegen(from); // MANA REGEN
+                case 15: return (int)RegenRates.HitPointRegen(from); // HP   REGEN
+                case 16: return (int)RegenRates.StamRegen(from); // Stam REGEN
+                case 17: return (int)RegenRates.ManaRegen(from); // MANA REGEN
                 case 18: return Math.Min(105, AosAttributes.GetValue(from, AosAttribute.ReflectPhysical)); // reflect phys
                 case 19: return Math.Min(50, AosAttributes.GetValue(from, AosAttribute.EnhancePotions)); // enhance pots
 
@@ -632,7 +618,7 @@ namespace Server
 
             if (attribute == AosAttribute.WeaponDamage)
             {
-                if (BaseMagicalFood.IsUnderInfluence(m, MagicalFood.WrathGrapes))
+                if (BaseMagicalFood.IsUnderInfluence(m, MagicalFood.GrapesOfWrath))
                     value += 35;
 
                 // attacker gets 10% bonus when they're under divine fury
@@ -671,7 +657,7 @@ namespace Server
             }
             else if (attribute == AosAttribute.SpellDamage)
             {
-                if (BaseMagicalFood.IsUnderInfluence(m, MagicalFood.WrathGrapes))
+                if (BaseMagicalFood.IsUnderInfluence(m, MagicalFood.GrapesOfWrath))
                     value += 15;
 
                 if (PsychicAttack.Registry.ContainsKey(m))
@@ -894,20 +880,6 @@ namespace Server
 
                 //Virtue Artifacts
                 value += AnkhPendant.GetManaRegenModifier(m);
-            }
-            else if (attribute == AosAttribute.BonusDex)
-            {
-                #region City Loyalty
-                if (CityLoyaltySystem.HasTradeDeal(m, TradeDeal.OrderOfEngineers))
-                    value += 3;
-                #endregion
-            }
-            else if (attribute == AosAttribute.BonusStr)
-            {
-                #region City Loyalty
-                if (CityLoyaltySystem.HasTradeDeal(m, TradeDeal.MiningCooperative))
-                    value += 3;
-                #endregion
             }
             #endregion
 
@@ -1516,7 +1488,7 @@ namespace Server
 
             if (HitLeechHits > 0)
             {
-                double postcap = (double)HitLeechHits / (double)Imbuing.GetPropRange(wep, AosWeaponAttribute.HitLeechHits)[1];
+                double postcap = (double)HitLeechHits / (double)ItemPropertyInfo.GetMaxIntensity(wep, AosWeaponAttribute.HitLeechHits);
                 if (postcap < 1.0) postcap = 1.0;
 
                 int newhits = (int)((wep.MlSpeed * 2500 / (100 + weaponSpeed)) * postcap);
@@ -1530,7 +1502,7 @@ namespace Server
 
             if (HitLeechMana > 0)
             {
-                double postcap = (double)HitLeechMana / (double)Imbuing.GetPropRange(wep, AosWeaponAttribute.HitLeechMana)[1];
+                double postcap = (double)HitLeechMana / (double)ItemPropertyInfo.GetMaxIntensity(wep, AosWeaponAttribute.HitLeechMana);
                 if (postcap < 1.0) postcap = 1.0;
 
                 int newmana = (int)((wep.MlSpeed * 2500 / (100 + weaponSpeed)) * postcap);
@@ -1975,7 +1947,9 @@ namespace Server
         HitSparks       = 0x00000004,
         Bane            = 0x00000008,
         MysticWeapon    = 0x00000010,
-        AssassinHoned   = 0x00000020
+        AssassinHoned   = 0x00000020,
+        Focus           = 0x00000040,
+        HitExplosion    = 0x00000080
     }
 
     public sealed class ExtendedWeaponAttributes : BaseAttributes
@@ -1995,7 +1969,7 @@ namespace Server
         {
         }
 
-        public static int GetValue(Mobile m, AosWeaponAttribute attribute)
+        public static int GetValue(Mobile m, ExtendedWeaponAttribute attribute)
         {
             if (!Core.AOS)
                 return 0;
@@ -2013,7 +1987,7 @@ namespace Server
 
                 if (obj is BaseWeapon)
                 {
-                    AosWeaponAttributes attrs = ((BaseWeapon)obj).WeaponAttributes;
+                    ExtendedWeaponAttributes attrs = ((BaseWeapon)obj).ExtendedWeaponAttributes;
 
                     if (attrs != null)
                         value += attrs[attribute];
@@ -2115,6 +2089,32 @@ namespace Server
             set
             {
                 this[ExtendedWeaponAttribute.AssassinHoned] = value;
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int Focus
+        {
+            get
+            {
+                return this[ExtendedWeaponAttribute.Focus];
+            }
+            set
+            {
+                this[ExtendedWeaponAttribute.Focus] = value;
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int HitExplosion
+        {
+            get
+            {
+                return this[ExtendedWeaponAttribute.HitExplosion];
+            }
+            set
+            {
+                this[ExtendedWeaponAttribute.HitExplosion] = value;
             }
         }
     }
@@ -2389,6 +2389,11 @@ namespace Server
 
         public void AddTo(Mobile m)
         {
+            if (Discordance.UnderPVPEffects(m))
+            {
+                return;
+            }
+
             Remove();
 
             for (int i = 0; i < 5; ++i)

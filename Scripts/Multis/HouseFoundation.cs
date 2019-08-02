@@ -28,88 +28,30 @@ namespace Server.Multis
     {
         private DesignState m_Current; // State which is currently visible.
         private DesignState m_Design;  // State of current design.
-        private DesignState m_Backup;  // State at last user backup.
-        private Item m_SignHanger;     // Item hanging the sign.
-        private Item m_Signpost;       // Item supporting the hanger.
-        private int m_SignpostGraphic; // ItemID number of the chosen signpost.
-        private int m_LastRevision;    // Latest revision number.
-        private List<Item> m_Fixtures; // List of fixtures (teleporters and doors) associated with this house.
-        private FoundationType m_Type; // Graphic type of this foundation.
-        private Mobile m_Customizer;   // Who is currently customizing this -or- null if not customizing.
+        private DesignState m_Backup;  // State at last user backup.        
+        
+        // Graphic type of this foundation.
+        public FoundationType Type { get; set; }
 
-        public FoundationType Type
-        {
-            get
-            {
-                return m_Type;
-            }
-            set
-            {
-                m_Type = value;
-            }
-        }
-        public int LastRevision
-        {
-            get
-            {
-                return m_LastRevision;
-            }
-            set
-            {
-                m_LastRevision = value;
-            }
-        }
-        public List<Item> Fixtures
-        {
-            get
-            {
-                return m_Fixtures;
-            }
-        }
-        public Item SignHanger
-        {
-            get
-            {
-                return m_SignHanger;
-            }
-        }
-        public Item Signpost
-        {
-            get
-            {
-                return m_Signpost;
-            }
-        }
-        public int SignpostGraphic
-        {
-            get
-            {
-                return m_SignpostGraphic;
-            }
-            set
-            {
-                m_SignpostGraphic = value;
-            }
-        }
-        public Mobile Customizer
-        {
-            get
-            {
-                return m_Customizer;
-            }
-            set
-            {
-                m_Customizer = value;
-            }
-        }
+        // Latest revision number.
+        public int LastRevision { get; set; }
 
-        public override bool IsAosRules
-        {
-            get
-            {
-                return true;
-            }
-        }
+        // List of fixtures (teleporters and doors) associated with this house.
+        public List<Item> Fixtures { get; set; }
+
+        // Item hanging the sign.
+        public Item SignHanger { get; set; }
+
+        // Item supporting the hanger.
+        public Item Signpost { get; set; }
+
+        // ItemID number of the chosen signpost.
+        public int SignpostGraphic { get; set; }
+
+        // Who is currently customizing this -or- null if not customizing.
+        public Mobile Customizer { get; set; }
+
+        public override bool IsAosRules { get { return true; } }
 
         public override bool IsActive
         {
@@ -129,7 +71,7 @@ namespace Server.Multis
 
         public bool IsFixture(Item item)
         {
-            return (m_Fixtures != null && m_Fixtures.Contains(item));
+            return (Fixtures != null && Fixtures.Contains(item));
         }
 
         public override MultiComponentList Components
@@ -149,6 +91,7 @@ namespace Server.Multis
             {
                 if (m_Current == null)
                     SetInitialState();
+
                 return m_Current;
             }
             set
@@ -163,6 +106,7 @@ namespace Server.Multis
             {
                 if (m_Design == null)
                     SetInitialState();
+
                 return m_Design;
             }
             set
@@ -177,6 +121,7 @@ namespace Server.Multis
             {
                 if (m_Backup == null)
                     SetInitialState();
+
                 return m_Backup;
             }
             set
@@ -197,24 +142,24 @@ namespace Server.Multis
         {
             base.OnAfterDelete();
 
-            if (m_SignHanger != null)
-                m_SignHanger.Delete();
+            if (SignHanger != null)
+                SignHanger.Delete();
 
-            if (m_Signpost != null)
-                m_Signpost.Delete();
+            if (Signpost != null)
+                Signpost.Delete();
 
-            if (m_Fixtures == null)
+            if (Fixtures == null)
                 return;
 
-            for (int i = 0; i < m_Fixtures.Count; ++i)
+            for (int i = 0; i < Fixtures.Count; ++i)
             {
-                Item item = m_Fixtures[i];
+                Item item = Fixtures[i];
 
                 if (item != null)
                     item.Delete();
             }
 
-            m_Fixtures.Clear();
+            Fixtures.Clear();
         }
 
         public override void OnLocationChange(Point3D oldLocation)
@@ -225,18 +170,18 @@ namespace Server.Multis
             int y = Location.Y - oldLocation.Y;
             int z = Location.Z - oldLocation.Z;
 
-            if (m_SignHanger != null)
-                m_SignHanger.MoveToWorld(new Point3D(m_SignHanger.X + x, m_SignHanger.Y + y, m_SignHanger.Z + z), Map);
+            if (SignHanger != null)
+                SignHanger.MoveToWorld(new Point3D(SignHanger.X + x, SignHanger.Y + y, SignHanger.Z + z), Map);
 
-            if (m_Signpost != null)
-                m_Signpost.MoveToWorld(new Point3D(m_Signpost.X + x, m_Signpost.Y + y, m_Signpost.Z + z), Map);
+            if (Signpost != null)
+                Signpost.MoveToWorld(new Point3D(Signpost.X + x, Signpost.Y + y, Signpost.Z + z), Map);
 
-            if (m_Fixtures == null)
+            if (Fixtures == null)
                 return;
 
-            for (int i = 0; i < m_Fixtures.Count; ++i)
+            for (int i = 0; i < Fixtures.Count; ++i)
             {
-                Item item = m_Fixtures[i];
+                Item item = Fixtures[i];
 
                 if (Doors.Contains(item))
                     continue;
@@ -249,41 +194,39 @@ namespace Server.Multis
         {
             base.OnMapChange();
 
-            if (m_SignHanger != null)
-                m_SignHanger.Map = Map;
+            if (SignHanger != null)
+                SignHanger.Map = Map;
 
-            if (m_Signpost != null)
-                m_Signpost.Map = Map;
+            if (Signpost != null)
+                Signpost.Map = Map;
 
-            if (m_Fixtures == null)
+            if (Fixtures == null)
                 return;
 
-            for (int i = 0; i < m_Fixtures.Count; ++i)
-                m_Fixtures[i].Map = Map;
+            for (int i = 0; i < Fixtures.Count; ++i)
+                Fixtures[i].Map = Map;
         }
 
         public void ClearFixtures(Mobile from)
         {
-            if (m_Fixtures == null)
+            if (Fixtures == null)
                 return;
 
             RemoveKeys(from);
 
-            for (int i = 0; i < m_Fixtures.Count; ++i)
+            for (int i = 0; i < Fixtures.Count; ++i)
             {
-                m_Fixtures[i].Delete();
-                Doors.Remove(m_Fixtures[i]);
+                Fixtures[i].Delete();
+                Doors.Remove(Fixtures[i]);
             }
 
-            m_Fixtures.Clear();
+            Fixtures.Clear();
         }
 
         public void AddFixtures(Mobile from, MultiTileEntry[] list)
         {
-            if (m_Fixtures == null)
-                m_Fixtures = new List<Item>();
-
-            uint keyValue = 0;
+            if (Fixtures == null)
+                Fixtures = new List<Item>();
 
             for (int i = 0; i < list.Length; ++i)
             {
@@ -298,234 +241,26 @@ namespace Server.Multis
                 }
                 else
                 {
-                    BaseDoor door = null;
-
-                    if (itemID >= 0x675 && itemID < 0x6F5)
-                    {
-                        int type = (itemID - 0x675) / 16;
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x675) / 2) % 8);
-
-                        switch( type )
-                        {
-                            case 0:
-                                door = new GenericHouseDoor(facing, 0x675, 0xEC, 0xF3);
-                                break;
-                            case 1:
-                                door = new GenericHouseDoor(facing, 0x685, 0xEC, 0xF3);
-                                break;
-                            case 2:
-                                door = new GenericHouseDoor(facing, 0x695, 0xEB, 0xF2);
-                                break;
-                            case 3:
-                                door = new GenericHouseDoor(facing, 0x6A5, 0xEA, 0xF1);
-                                break;
-                            case 4:
-                                door = new GenericHouseDoor(facing, 0x6B5, 0xEA, 0xF1);
-                                break;
-                            case 5:
-                                door = new GenericHouseDoor(facing, 0x6C5, 0xEC, 0xF3);
-                                break;
-                            case 6:
-                                door = new GenericHouseDoor(facing, 0x6D5, 0xEA, 0xF1);
-                                break;
-                            case 7:
-                                door = new GenericHouseDoor(facing, 0x6E5, 0xEA, 0xF1);
-                                break;
-                        }
-                    }
-                    else if (itemID >= 0x314 && itemID < 0x364)
-                    {
-                        int type = (itemID - 0x314) / 16;
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x314) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x314 + (type * 16), 0xED, 0xF4);
-                    }
-                    else if (itemID >= 0x824 && itemID < 0x834)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x824) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x824, 0xEC, 0xF3);
-                    }
-                    else if (itemID >= 0x839 && itemID < 0x849)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x839) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x839, 0xEB, 0xF2);
-                    }
-                    else if (itemID >= 0x84C && itemID < 0x85C)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x84C) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x84C, 0xEC, 0xF3);
-                    }
-                    else if (itemID >= 0x866 && itemID < 0x876)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x866) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x866, 0xEB, 0xF2);
-                    }
-                    else if (itemID >= 0xE8 && itemID < 0xF8)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0xE8) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0xE8, 0xED, 0xF4);
-                    }
-                    else if (itemID >= 0x1FED && itemID < 0x1FFD)
-                    {
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x1FED) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x1FED, 0xEC, 0xF3);
-                    }
-                    else if (itemID >= 0x241F && itemID < 0x2421)
-                    {
-                        //DoorFacing facing = (DoorFacing)(((itemID - 0x241F) / 2) % 8);
-                        door = new GenericHouseDoor(DoorFacing.NorthCCW, 0x2415, -1, -1);
-                    }
-                    else if (itemID >= 0x2423 && itemID < 0x2425)
-                    {
-                        //DoorFacing facing = (DoorFacing)(((itemID - 0x241F) / 2) % 8);
-                        //This one and the above one are 'special' cases, ie: OSI had the ItemID pattern discombobulated for these
-                        door = new GenericHouseDoor(DoorFacing.WestCW, 0x2423, -1, -1);
-                    }
-                    else if (itemID >= 0x2A05 && itemID < 0x2A1D)
-                    {
-                        DoorFacing facing = (DoorFacing)((((itemID - 0x2A05) / 2) % 4) + 8);
-
-                        int sound = (itemID >= 0x2A0D && itemID < 0x2a15) ? 0x539 : -1;
-
-                        door = new GenericHouseDoor(facing, 0x29F5 + (8 * ((itemID - 0x2A05) / 8)), sound, sound);
-                    }
-                    else if (itemID == 0x2D46)
-                    {
-                        door = new GenericHouseDoor(DoorFacing.NorthCW, 0x2D46, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID == 0x2D48 || itemID == 0x2FE2)
-                    {
-                        door = new GenericHouseDoor(DoorFacing.SouthCCW, itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x2D63 && itemID < 0x2D70)
-                    {
-                        int mod = (itemID - 0x2D63) / 2 % 2;
-                        DoorFacing facing = ((mod == 0) ? DoorFacing.SouthCCW : DoorFacing.WestCCW);
-
-                        int type = (itemID - 0x2D63) / 4;
-
-                        door = new GenericHouseDoor(facing, 0x2D63 + 4 * type + mod * 2, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID == 0x2FE4 || itemID == 0x31AE)
-                    {
-                        door = new GenericHouseDoor(DoorFacing.WestCCW, itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x319C && itemID < 0x31AE)
-                    {
-                        //special case for 0x31aa <-> 0x31a8 (a9)
-                        int mod = (itemID - 0x319C) / 2 % 2;
-
-                        //bool specialCase = (itemID == 0x31AA || itemID == 0x31A8);
-
-                        DoorFacing facing;
-
-                        if (itemID == 0x31AA || itemID == 0x31A8)
-                            facing = ((mod == 0) ? DoorFacing.NorthCW : DoorFacing.EastCW);
-                        else
-                            facing = ((mod == 0) ? DoorFacing.EastCW : DoorFacing.NorthCW);
-
-                        int type = (itemID - 0x319C) / 4;
-
-                        door = new GenericHouseDoor(facing, 0x319C + 4 * type + mod * 2, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x367B && itemID < 0x369B)
-                    {
-                        int type = (itemID - 0x367B) / 16;
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x367B) / 2) % 8);
-
-                        switch( type )
-                        {
-                            case 0:
-                                door = new GenericHouseDoor(facing, 0x367B, 0xED, 0xF4);
-                                break;	//crystal
-                            case 1:
-                                door = new GenericHouseDoor(facing, 0x368B, 0xEC, 0x3E7);
-                                break;	//shadow
-                        }
-                    }
-                    else if (itemID >= 0x409B && itemID < 0x40A3)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x409B), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x410C && itemID < 0x4114)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x410C), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x41C2 && itemID < 0x41CA)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x41C2), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x41CF && itemID < 0x41D7)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x41CF), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x436E && itemID < 0x437E)
-                    {
-                        /* These ones had to be different...
-                        * Offset		0	2	4	6	8	10	12	14
-                        * DoorFacing	2	3	2	3	6	7	6	7
-                        */
-                        int offset = itemID - 0x436E;
-                        DoorFacing facing = (DoorFacing)((offset / 2 + 2 * ((1 + offset / 4) % 2)) % 8);
-                        door = new GenericHouseDoor(facing, itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x46DD && itemID < 0x46E5)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x46DD), itemID, 0xEB, 0xF2, false);
-                    }
-                    else if (itemID >= 0x4D22 && itemID < 0x4D2A)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x4D22), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x50C8 && itemID < 0x50D0)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x50C8), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x50D0 && itemID < 0x50D8)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x50D0), itemID, 0xEA, 0xF1, false);
-                    }
-                    else if (itemID >= 0x5142 && itemID < 0x514A)
-                    {
-                        door = new GenericHouseDoor(GetSADoorFacing(itemID - 0x5142), itemID, 0xF0, 0xEF, false);
-                    }
-                    else if (itemID >= 0x9AD7 && itemID <= 0x9AE6)
-                    {
-                        int type = (itemID - 0x9AD7) / 16;
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x9AD7) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x9AD7 + (type * 16), 0xED, 0xF4);
-                    }
-                    else if (itemID >= 0x9B3C && itemID <= 0x9B4B)
-                    {
-                        int type = (itemID - 0x9B3C) / 16;
-                        DoorFacing facing = (DoorFacing)(((itemID - 0x9B3C) / 2) % 8);
-                        door = new GenericHouseDoor(facing, 0x9B3C + (type * 16), 0xED, 0xF4);
-                    }
+                    BaseDoor door = AddDoor(from, itemID, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
 
                     if (door != null)
                     {
-                        if (keyValue == 0)
-                            keyValue = CreateKeys(from);
-
-                        door.Locked = true;
-                        door.KeyValue = keyValue;
-
-                        AddDoor(door, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
-                        m_Fixtures.Add(door);
+                        Fixtures.Add(door);
                     }
                 }
             }
 
-            for (int i = 0; i < m_Fixtures.Count; ++i)
+            for (int i = 0; i < Fixtures.Count; ++i)
             {
-                Item fixture = m_Fixtures[i];
+                Item fixture = Fixtures[i];
 
                 if (fixture is HouseTeleporter)
                 {
                     HouseTeleporter tp = (HouseTeleporter)fixture;
 
-                    for (int j = 1; j <= m_Fixtures.Count; ++j)
+                    for (int j = 1; j <= Fixtures.Count; ++j)
                     {
-                        HouseTeleporter check = m_Fixtures[(i + j) % m_Fixtures.Count] as HouseTeleporter;
+                        HouseTeleporter check = Fixtures[(i + j) % Fixtures.Count] as HouseTeleporter;
 
                         if (check != null && check.ItemID == tp.ItemID)
                         {
@@ -609,9 +344,9 @@ namespace Server.Multis
                             break;
                     }
 
-                    for (int j = i + 1; j < m_Fixtures.Count; ++j)
+                    for (int j = i + 1; j < Fixtures.Count; ++j)
                     {
-                        BaseHouseDoor check = m_Fixtures[j] as BaseHouseDoor;
+                        BaseHouseDoor check = Fixtures[j] as BaseHouseDoor;
 
                         if (check != null && check.Link == null && check.Facing == linkFacing && (check.X - door.X) == xOffset && (check.Y - door.Y) == yOffset && (check.Z == door.Z))
                         {
@@ -624,17 +359,9 @@ namespace Server.Multis
             }
         }
 
-        private static DoorFacing GetSADoorFacing(int offset)
-        {
-            /* Offset		0	2	4	6
-            * DoorFacing	2	3	6	7
-            */
-            return (DoorFacing)((offset / 2 + 2 * (1 + offset / 4)) % 8);
-        }
-
         public void AddFixture(Item item, MultiTileEntry mte)
         {
-            m_Fixtures.Add(item);
+            Fixtures.Add(item);
             item.MoveToWorld(new Point3D(X + mte.m_OffsetX, Y + mte.m_OffsetY, Z + mte.m_OffsetZ), Map);
         }
 
@@ -755,7 +482,7 @@ namespace Server.Multis
             int yCenter = mcl.Center.Y;
             int y = mcl.Height - 1;
 
-            ApplyFoundation(m_Type, mcl);
+            ApplyFoundation(Type, mcl);
 
             for (int x = 1; x < mcl.Width; ++x)
                 mcl.Add(0x751, x - xCenter, y - yCenter, 0);
@@ -790,20 +517,20 @@ namespace Server.Multis
 
             if (CheckWall(mcl, x, y))
             {
-                if (m_Signpost != null)
-                    m_Signpost.Delete();
+                if (Signpost != null)
+                    Signpost.Delete();
 
-                m_Signpost = null;
+                Signpost = null;
             }
-            else if (m_Signpost == null)
+            else if (Signpost == null)
             {
-                m_Signpost = new Static(m_SignpostGraphic);
-                m_Signpost.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
+                Signpost = new Static(SignpostGraphic);
+                Signpost.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
             }
             else
             {
-                m_Signpost.ItemID = m_SignpostGraphic;
-                m_Signpost.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
+                Signpost.ItemID = SignpostGraphic;
+                Signpost.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
             }
         }
 
@@ -831,15 +558,15 @@ namespace Server.Multis
         public HouseFoundation(Mobile owner, int multiID, int maxLockdowns, int maxSecures)
             : base(multiID, owner, maxLockdowns, maxSecures)
         {
-            m_SignpostGraphic = 9;
+            SignpostGraphic = 9;
 
-            m_Fixtures = new List<Item>();
+            Fixtures = new List<Item>();
 
             int x = Components.Min.X;
             int y = Components.Height - 1 - Components.Center.Y;
 
-            m_SignHanger = new Static(0xB98);
-            m_SignHanger.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
+            SignHanger = new Static(0xB98);
+            SignHanger.MoveToWorld(new Point3D(X + x, Y + y, Z + 7), Map);
 
             CheckSignpost();
 
@@ -887,6 +614,7 @@ namespace Server.Multis
             m.Send(new BeginHouseCustomization(this));
 
             NetState ns = m.NetState;
+
             if (ns != null)
                 SendInfoTo(ns);
 
@@ -912,15 +640,15 @@ namespace Server.Multis
         {
             writer.Write((int)5); // version
 
-            writer.Write(m_Signpost);
-            writer.Write((int)m_SignpostGraphic);
+            writer.Write(Signpost);
+            writer.Write((int)SignpostGraphic);
 
-            writer.Write((int)m_Type);
+            writer.Write((int)Type);
 
-            writer.Write(m_SignHanger);
+            writer.Write(SignHanger);
 
-            writer.Write((int)m_LastRevision);
-            writer.Write(m_Fixtures, true);
+            writer.Write((int)LastRevision);
+            writer.Write(Fixtures, true);
 
             CurrentState.Serialize(writer);
             DesignState.Serialize(writer);
@@ -948,20 +676,20 @@ namespace Server.Multis
                 case 5:
                 case 4:
                     {
-                        m_Signpost = reader.ReadItem();
-                        m_SignpostGraphic = reader.ReadInt();
+                        Signpost = reader.ReadItem();
+                        SignpostGraphic = reader.ReadInt();
 
                         goto case 3;
                     }
                 case 3:
                     {
-                        m_Type = (FoundationType)reader.ReadInt();
+                        Type = (FoundationType)reader.ReadInt();
 
                         goto case 2;
                     }
                 case 2:
                     {
-                        m_SignHanger = reader.ReadItem();
+                        SignHanger = reader.ReadItem();
 
                         goto case 1;
                     }
@@ -975,13 +703,13 @@ namespace Server.Multis
                 case 0:
                     {
                         if (version < 3)
-                            m_Type = FoundationType.Stone;
+                            Type = FoundationType.Stone;
 
                         if (version < 4)
-                            m_SignpostGraphic = 9;
+                            SignpostGraphic = 9;
 
-                        m_LastRevision = reader.ReadInt();
-                        m_Fixtures = reader.ReadStrongItemList();
+                        LastRevision = reader.ReadInt();
+                        Fixtures = reader.ReadStrongItemList();
 
                         m_Current = new DesignState(this, reader);
                         m_Design = new DesignState(this, reader);
@@ -991,7 +719,7 @@ namespace Server.Multis
                     }
             }
 
-            if (m_LastRevision == 0)
+            if (LastRevision == 0)
             {
                 OnPlacement();
             }
@@ -1029,6 +757,7 @@ namespace Server.Multis
             PacketHandlers.RegisterEncoded(0x0C, true, new OnEncodedPacketReceive(Designer_Close));
             PacketHandlers.RegisterEncoded(0x0D, true, new OnEncodedPacketReceive(Designer_Stairs));
             PacketHandlers.RegisterEncoded(0x0E, true, new OnEncodedPacketReceive(Designer_Sync));
+            PacketHandlers.RegisterEncoded(0x0F, true, new OnEncodedPacketReceive(Designer_Action)); // WTF does this do?
             PacketHandlers.RegisterEncoded(0x10, true, new OnEncodedPacketReceive(Designer_Clear));
             PacketHandlers.RegisterEncoded(0x12, true, new OnEncodedPacketReceive(Designer_Level));
 
@@ -1064,6 +793,11 @@ namespace Server.Multis
                 // Resend full house state
                 design.SendDetailedInfoTo(state);
             }
+        }
+
+        public static void Designer_Action(NetState state, IEntity e, EncodedReader pvSrc)
+        {
+            // TODO: What does this do?
         }
 
         public static void Designer_Clear(NetState state, IEntity e, EncodedReader pvSrc)
@@ -1280,7 +1014,7 @@ namespace Server.Multis
             // Notify the core that the foundation has changed and should be resent to all clients
             Delta(ItemDelta.Update);
             ProcessDelta();
-            CurrentState.SendDetailedInfoTo(from.NetState);
+            CurrentState.SendDetailedInfoTo(from.NetState, false);
             
             // If a signpost is needed, add it
             CheckSignpost();
@@ -1373,8 +1107,6 @@ namespace Server.Multis
 
             return Verification.IsItemValid(itemID);
         }
-
-        public static readonly bool AllowStairSectioning = true;
 
         /* Stair block IDs
         * (sorted ascending)
@@ -1486,9 +1218,6 @@ namespace Server.Multis
             if (!IsStair(id, ref dir))
                 return false;
 
-            if (AllowStairSectioning)
-                return true; // skip deletion
-
             int height = ((z - 7) % 20) / 5;
 
             int xStart, yStart;
@@ -1598,21 +1327,11 @@ namespace Server.Multis
                     return;
                 }
 
-                bool fixState = false;
+                bool deleteStairs = DeleteStairs(mcl, itemID, x, y, z);
 
                 // Remove the component
-                if (AllowStairSectioning)
-                {
-                    if (DeleteStairs(mcl, itemID, x, y, z))
-                        fixState = true; // The client removes the entire set of stairs locally, resend state
-
+                if (!deleteStairs)
                     mcl.Remove(itemID, x, y, z);
-                }
-                else
-                {
-                    if (!DeleteStairs(mcl, itemID, x, y, z))
-                        mcl.Remove(itemID, x, y, z);
-                }
 
                 // If needed, replace removed component with a dirt tile
                 if (ax >= 1 && ax < mcl.Width && ay >= 1 && ay < mcl.Height - 1)
@@ -1635,8 +1354,8 @@ namespace Server.Multis
                 design.OnRevised();
 
                 // Resend design state
-                if (fixState)
-                    design.SendDetailedInfoTo(state);
+                if (deleteStairs)
+                    design.SendDetailedInfoTo(state);                               
             }
         }
 
@@ -1864,7 +1583,7 @@ namespace Server.Multis
 
                 // Refresh client with current visible design state
                 context.Foundation.SendInfoTo(state);
-                context.Foundation.CurrentState.SendDetailedInfoTo(state);
+                context.Foundation.CurrentState.SendDetailedInfoTo(state, false);
 
                 // If a signpost is needed, add it
                 context.Foundation.CheckSignpost();
@@ -2018,18 +1737,11 @@ namespace Server.Multis
 
     public class DesignState
     {
-        private readonly HouseFoundation m_Foundation;
-        private readonly MultiComponentList m_Components;
-        private MultiTileEntry[] m_Fixtures;
-        private int m_Revision;
         private Packet m_PacketCache;
 
         public Packet PacketCache
         {
-            get
-            {
-                return m_PacketCache;
-            }
+            get { return m_PacketCache; }
             set
             {
                 if (m_PacketCache == value)
@@ -2042,60 +1754,32 @@ namespace Server.Multis
             }
         }
 
-        public HouseFoundation Foundation
-        {
-            get
-            {
-                return m_Foundation;
-            }
-        }
-        public MultiComponentList Components
-        {
-            get
-            {
-                return m_Components;
-            }
-        }
-        public MultiTileEntry[] Fixtures
-        {
-            get
-            {
-                return m_Fixtures;
-            }
-        }
-        public int Revision
-        {
-            get
-            {
-                return m_Revision;
-            }
-            set
-            {
-                m_Revision = value;
-            }
-        }
+        public HouseFoundation Foundation { get; set; }
+        public MultiComponentList Components { get; set; }
+        public MultiTileEntry[] Fixtures { get; set; }
+        public int Revision { get; set; }
 
         public DesignState(HouseFoundation foundation, MultiComponentList components)
         {
-            m_Foundation = foundation;
-            m_Components = components;
-            m_Fixtures = new MultiTileEntry[0];
+            Foundation = foundation;
+            Components = components;
+            Fixtures = new MultiTileEntry[0];
         }
 
         public DesignState(DesignState toCopy)
         {
-            m_Foundation = toCopy.m_Foundation;
-            m_Components = new MultiComponentList(toCopy.m_Components);
-            m_Revision = toCopy.m_Revision;
-            m_Fixtures = new MultiTileEntry[toCopy.m_Fixtures.Length];
+            Foundation = toCopy.Foundation;
+            Components = new MultiComponentList(toCopy.Components);
+            Revision = toCopy.Revision;
+            Fixtures = new MultiTileEntry[toCopy.Fixtures.Length];
 
-            for (int i = 0; i < m_Fixtures.Length; ++i)
-                m_Fixtures[i] = toCopy.m_Fixtures[i];
+            for (int i = 0; i < Fixtures.Length; ++i)
+                Fixtures[i] = toCopy.Fixtures[i];
         }
 
         public DesignState(HouseFoundation foundation, GenericReader reader)
         {
-            m_Foundation = foundation;
+            Foundation = foundation;
 
             int version = reader.ReadInt();
 
@@ -2104,26 +1788,26 @@ namespace Server.Multis
                 case 1:
                 case 0:
                     {
-                        m_Components = new MultiComponentList(reader);
+                        Components = new MultiComponentList(reader);
 
                         int length = reader.ReadInt();
 
-                        m_Fixtures = new MultiTileEntry[length];
+                        Fixtures = new MultiTileEntry[length];
 
                         for (int i = 0; i < length; ++i)
                         {
-                            m_Fixtures[i].m_ItemID = reader.ReadUShort();
-                            m_Fixtures[i].m_OffsetX = reader.ReadShort();
-                            m_Fixtures[i].m_OffsetY = reader.ReadShort();
-                            m_Fixtures[i].m_OffsetZ = reader.ReadShort();
+                            Fixtures[i].m_ItemID = reader.ReadUShort();
+                            Fixtures[i].m_OffsetX = reader.ReadShort();
+                            Fixtures[i].m_OffsetY = reader.ReadShort();
+                            Fixtures[i].m_OffsetZ = reader.ReadShort();
 
                             if (version > 0)
-                                m_Fixtures[i].m_Flags = (TileFlag)reader.ReadULong();
+                                Fixtures[i].m_Flags = (TileFlag)reader.ReadULong();
                             else
-                                m_Fixtures[i].m_Flags = (TileFlag)reader.ReadUInt();
+                                Fixtures[i].m_Flags = (TileFlag)reader.ReadUInt();
                         }
 
-                        m_Revision = reader.ReadInt();
+                        Revision = reader.ReadInt();
 
                         break;
                     }
@@ -2134,13 +1818,13 @@ namespace Server.Multis
         {
             writer.Write((int)1); // version
 
-            m_Components.Serialize(writer);
+            Components.Serialize(writer);
 
-            writer.Write((int)m_Fixtures.Length);
+            writer.Write((int)Fixtures.Length);
 
-            for (int i = 0; i < m_Fixtures.Length; ++i)
+            for (int i = 0; i < Fixtures.Length; ++i)
             {
-                MultiTileEntry ent = m_Fixtures[i];
+                MultiTileEntry ent = Fixtures[i];
 
                 writer.Write((ushort)ent.m_ItemID);
                 writer.Write((short)ent.m_OffsetX);
@@ -2150,14 +1834,14 @@ namespace Server.Multis
                 writer.Write((ulong)ent.m_Flags);
             }
 
-            writer.Write((int)m_Revision);
+            writer.Write((int)Revision);
         }
 
         public void OnRevised()
         {
             lock (this)
             {
-                m_Revision = ++m_Foundation.LastRevision;
+                Revision = ++Foundation.LastRevision;
 
                 if (m_PacketCache != null)
                     m_PacketCache.Release();
@@ -2169,17 +1853,17 @@ namespace Server.Multis
         public void SendGeneralInfoTo(NetState state)
         {
             if (state != null)
-                state.Send(new DesignStateGeneral(m_Foundation, this));
+                state.Send(new DesignStateGeneral(Foundation, this));
         }
 
-        public void SendDetailedInfoTo(NetState state)
+        public void SendDetailedInfoTo(NetState state, bool response = true)
         {
             if (state != null)
             {
                 lock (this)
                 {
                     if (m_PacketCache == null)
-                        DesignStateDetailed.SendDetails(state, m_Foundation, this);
+                        DesignStateDetailed.SendDetails(state, Foundation, this, response);
                     else
                         state.Send(m_PacketCache);
                 }
@@ -2190,21 +1874,21 @@ namespace Server.Multis
         {
             OnRevised();
 
-            for (int i = 0; i < m_Fixtures.Length; ++i)
+            for (int i = 0; i < Fixtures.Length; ++i)
             {
-                MultiTileEntry mte = m_Fixtures[i];
+                MultiTileEntry mte = Fixtures[i];
 
-                m_Components.Add(mte.m_ItemID, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
+                Components.Add(mte.m_ItemID, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
             }
 
-            m_Fixtures = new MultiTileEntry[0];
+            Fixtures = new MultiTileEntry[0];
         }
 
         public void MeltFixtures()
         {
             OnRevised();
 
-            MultiTileEntry[] list = m_Components.List;
+            MultiTileEntry[] list = Components.List;
             int length = 0;
 
             for (int i = list.Length - 1; i >= 0; --i)
@@ -2215,7 +1899,7 @@ namespace Server.Multis
                     ++length;
             }
 
-            m_Fixtures = new MultiTileEntry[length];
+            Fixtures = new MultiTileEntry[length];
 
             for (int i = list.Length - 1; i >= 0; --i)
             {
@@ -2223,8 +1907,8 @@ namespace Server.Multis
 
                 if (IsFixture(mte.m_ItemID))
                 {
-                    m_Fixtures[--length] = mte;
-                    m_Components.Remove(mte.m_ItemID, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
+                    Fixtures[--length] = mte;
+                    Components.Remove(mte.m_ItemID, mte.m_OffsetX, mte.m_OffsetY, mte.m_OffsetZ);
                 }
             }
         }
@@ -2354,50 +2038,19 @@ namespace Server.Multis
 
     public class DesignContext
     {
-        private readonly HouseFoundation m_Foundation;
-        private int m_Level;
+        public HouseFoundation Foundation { get; set; }
 
-        public HouseFoundation Foundation
-        {
-            get
-            {
-                return m_Foundation;
-            }
-        }
-        public int Level
-        {
-            get
-            {
-                return m_Level;
-            }
-            set
-            {
-                m_Level = value;
-            }
-        }
-        public int MaxLevels
-        {
-            get
-            {
-                return m_Foundation.MaxLevels;
-            }
-        }
+        public int Level { get; set; }
+
+        public int MaxLevels { get { return Foundation.MaxLevels; } }
 
         public DesignContext(HouseFoundation foundation)
         {
-            m_Foundation = foundation;
-            m_Level = 1;
+            Foundation = foundation;
+            Level = 1;
         }
 
-        private static readonly Dictionary<Mobile, DesignContext> m_Table = new Dictionary<Mobile, DesignContext>();
-
-        public static Dictionary<Mobile, DesignContext> Table
-        {
-            get
-            {
-                return m_Table;
-            }
-        }
+        private static readonly Dictionary<Mobile, DesignContext> Table = new Dictionary<Mobile, DesignContext>();
 
         public static DesignContext Find(Mobile from)
         {
@@ -2405,7 +2058,7 @@ namespace Server.Multis
                 return null;
 
             DesignContext d;
-            m_Table.TryGetValue(from, out d);
+            Table.TryGetValue(from, out d);
 
             return d;
         }
@@ -2428,7 +2081,7 @@ namespace Server.Multis
 
             DesignContext c = new DesignContext(foundation);
 
-            m_Table[from] = c;
+            Table[from] = c;
 
             if (from is PlayerMobile)
                 ((PlayerMobile)from).DesignContext = c;
@@ -2443,8 +2096,16 @@ namespace Server.Multis
             if (state == null)
                 return;
 
-            from.ClearScreen();
-            from.SendEverything();
+            foundation.Fixtures.ForEach(x => state.Send(x.RemovePacket));
+
+            if (foundation.Signpost != null)
+                state.Send(foundation.Signpost.RemovePacket);
+
+            if (foundation.SignHanger != null)
+                state.Send(foundation.SignHanger.RemovePacket);
+
+            if (foundation.Sign != null)
+                state.Send(foundation.Sign.RemovePacket);
         }
 
         public static void Remove(Mobile from)
@@ -2454,7 +2115,7 @@ namespace Server.Multis
             if (context == null)
                 return;
 
-            m_Table.Remove(from);
+            Table.Remove(from);
 
             if (from is PlayerMobile)
                 ((PlayerMobile)from).DesignContext = null;
@@ -2469,8 +2130,16 @@ namespace Server.Multis
             if (state == null)
                 return;
 
-            from.ClearScreen();
-            from.SendEverything();
+            context.Foundation.Fixtures.ForEach(x => x.SendInfoTo(state));
+
+            if (context.Foundation.Signpost != null)
+                context.Foundation.Signpost.SendInfoTo(state);
+
+            if (context.Foundation.SignHanger != null)
+                context.Foundation.SignHanger.SendInfoTo(state);
+
+            if (context.Foundation.Sign != null)
+                context.Foundation.Sign.SendInfoTo(state);
         }
     }
 
@@ -2525,12 +2194,15 @@ namespace Server.Multis
     {
         public const int MaxItemsPerStairBuffer = 750;
 
-        private static byte[][] m_PlaneBuffers;
-        private static bool[] m_PlaneUsed;
+        private static BufferPool m_PlaneBufferPool = new BufferPool("Housing Plane Buffers", 9, 0x2000);
+        private static BufferPool m_StairBufferPool = new BufferPool("Housing Stair Buffers", 6, MaxItemsPerStairBuffer * 5);
+        private static BufferPool m_DeflatedBufferPool = new BufferPool("Housing Deflated Buffers", 1, 0x2000);
 
-        private static byte[][] m_StairBuffers;
+        private byte[][] m_PlaneBuffers;
+        private byte[][] m_StairBuffers;
 
-        private static readonly byte[] m_PrimBuffer = new byte[4];
+        private bool[] m_PlaneUsed = new bool[9];
+        private byte[] m_PrimBuffer = new byte[4];
 
         public void Write(int value)
         {
@@ -2566,16 +2238,16 @@ namespace Server.Multis
                 buffer[i] = 0;
         }
 
-        public DesignStateDetailed(int serial, int revision, int xMin, int yMin, int xMax, int yMax, MultiTileEntry[] tiles)
+        public DesignStateDetailed(int serial, int revision, bool response, int xMin, int yMin, int xMax, int yMax, MultiTileEntry[] tiles)
             : base(0xD8)
         {
             EnsureCapacity(17 + (tiles.Length * 5));
 
             Write((byte)0x03); // Compression Type
-            Write((byte)0x00); // Unknown
-            Write((int)serial);
-            Write((int)revision);
-            Write((short)tiles.Length);
+            Write((byte)(response ? 0x01 : 0x00)); // Enable Response (0x00 or 0x01)
+            Write((int)serial); // Serial
+            Write((int)revision); // Revision Number
+            Write((short)tiles.Length); // Tile Length
             Write((short)0); // Buffer length : reserved
             Write((byte)0); // Plane count : reserved
 
@@ -2584,31 +2256,24 @@ namespace Server.Multis
             int width = (xMax - xMin) + 1;
             int height = (yMax - yMin) + 1;
 
-            if (m_PlaneBuffers == null)
-            {
-                m_PlaneBuffers = new byte[9][];
-                m_PlaneUsed = new bool[9];
+            m_PlaneBuffers = new byte[9][];
 
+            lock (m_PlaneBufferPool)
                 for (int i = 0; i < m_PlaneBuffers.Length; ++i)
-                    m_PlaneBuffers[i] = new byte[0x400];
+                    m_PlaneBuffers[i] = m_PlaneBufferPool.AcquireBuffer();
 
-                m_StairBuffers = new byte[6][];
+            m_StairBuffers = new byte[6][];
 
+            lock (m_StairBufferPool)
                 for (int i = 0; i < m_StairBuffers.Length; ++i)
-                    m_StairBuffers[i] = new byte[MaxItemsPerStairBuffer * 5];
-            }
-            else
+                    m_StairBuffers[i] = m_StairBufferPool.AcquireBuffer();
+
+            Clear(m_PlaneBuffers[0], width * height * 2);
+
+            for (int i = 0; i < 4; ++i)
             {
-                for (int i = 0; i < m_PlaneUsed.Length; ++i)
-                    m_PlaneUsed[i] = false;
-
-                Clear(m_PlaneBuffers[0], width * height * 2);
-
-                for (int i = 0; i < 4; ++i)
-                {
-                    Clear(m_PlaneBuffers[1 + i], (width - 1) * (height - 2) * 2);
-                    Clear(m_PlaneBuffers[5 + i], width * (height - 1) * 2);
-                }
+                Clear(m_PlaneBuffers[1 + i], (width - 1) * (height - 2) * 2);
+                Clear(m_PlaneBuffers[5 + i], width * (height - 1) * 2);
             }
 
             int totalStairsUsed = 0;
@@ -2622,23 +2287,13 @@ namespace Server.Multis
                 bool floor = (TileData.ItemTable[mte.m_ItemID & TileData.MaxItemValue].Height <= 0);
                 int plane, size;
 
-                switch( z )
+                switch (z)
                 {
-                    case 0:
-                        plane = 0;
-                        break;
-                    case 7:
-                        plane = 1;
-                        break;
-                    case 27:
-                        plane = 2;
-                        break;
-                    case 47:
-                        plane = 3;
-                        break;
-                    case 67:
-                        plane = 4;
-                        break;
+                    case 0: plane = 0; break;
+                    case 7: plane = 1; break;
+                    case 27: plane = 2; break;
+                    case 47: plane = 3; break;
+                    case 67: plane = 4; break;
                     default:
                         {
                             int stairBufferIndex = (totalStairsUsed / MaxItemsPerStairBuffer);
@@ -2703,10 +2358,17 @@ namespace Server.Multis
 
             int planeCount = 0;
 
+            byte[] m_DeflatedBuffer = null;
+            lock (m_DeflatedBufferPool)
+                m_DeflatedBuffer = m_DeflatedBufferPool.AcquireBuffer();
+
             for (int i = 0; i < m_PlaneBuffers.Length; ++i)
             {
                 if (!m_PlaneUsed[i])
+                {
+                    m_PlaneBufferPool.ReleaseBuffer(m_PlaneBuffers[i]);
                     continue;
+                }
 
                 ++planeCount;
 
@@ -2738,6 +2400,8 @@ namespace Server.Multis
                 Write(m_DeflatedBuffer, 0, deflatedLength);
 
                 totalLength += 4 + deflatedLength;
+                lock (m_PlaneBufferPool)
+                    m_PlaneBufferPool.ReleaseBuffer(inflatedBuffer);
             }
 
             int totalStairBuffersUsed = (totalStairsUsed + (MaxItemsPerStairBuffer - 1)) / MaxItemsPerStairBuffer;
@@ -2774,48 +2438,44 @@ namespace Server.Multis
                 totalLength += 4 + deflatedLength;
             }
 
+            lock (m_StairBufferPool)
+                for (int i = 0; i < m_StairBuffers.Length; ++i)
+                    m_StairBufferPool.ReleaseBuffer(m_StairBuffers[i]);
+
+            lock (m_DeflatedBufferPool)
+                m_DeflatedBufferPool.ReleaseBuffer(m_DeflatedBuffer);
+
             m_Stream.Seek(15, System.IO.SeekOrigin.Begin);
 
             Write((short)totalLength); // Buffer length
             Write((byte)planeCount); // Plane count
         }
 
-        private static readonly byte[] m_InflatedBuffer = new byte[0x2000];
-        private static readonly byte[] m_DeflatedBuffer = new byte[0x2000];
-
         private class SendQueueEntry
         {
-            public readonly NetState m_NetState;
-            public readonly int m_Serial;
+            public NetState State;
+            public int Serial, Revision;
+            public int xMin, yMin, xMax, yMax;
+            public DesignState Root;
+            public MultiTileEntry[] Tiles;
+            public bool EnableResponse;
 
-            public readonly int m_Revision;
-
-            public readonly int m_xMin;
-
-            public readonly int m_yMin;
-
-            public readonly int m_xMax;
-
-            public readonly int m_yMax;
-
-            public readonly DesignState m_Root;
-            public readonly MultiTileEntry[] m_Tiles;
-
-            public SendQueueEntry(NetState ns, HouseFoundation foundation, DesignState state)
+            public SendQueueEntry(NetState ns, HouseFoundation foundation, DesignState state, bool response)
             {
-                m_NetState = ns;
-                m_Serial = foundation.Serial;
-                m_Revision = state.Revision;
-                m_Root = state;
+                State = ns;
+                Serial = foundation.Serial;
+                Revision = state.Revision;
+                Root = state;
+                EnableResponse = response;
 
                 MultiComponentList mcl = state.Components;
 
-                m_xMin = mcl.Min.X;
-                m_yMin = mcl.Min.Y;
-                m_xMax = mcl.Max.X;
-                m_yMax = mcl.Max.Y;
+                xMin = mcl.Min.X;
+                yMin = mcl.Min.Y;
+                xMax = mcl.Max.X;
+                yMax = mcl.Max.Y;
 
-                m_Tiles = mcl.List;
+                Tiles = mcl.List;
             }
         }
 
@@ -2831,7 +2491,7 @@ namespace Server.Multis
             m_Sync = new AutoResetEvent(false);
 
             m_Thread = new Thread(new ThreadStart(CompressionThread));
-            m_Thread.Name = "AOS Compression Thread";
+            m_Thread.Name = "Housing Compression Thread";
             m_Thread.Start();
         }
 
@@ -2857,22 +2517,22 @@ namespace Server.Multis
                     {
                         Packet p = null;
 
-                        lock (sqe.m_Root)
-                            p = sqe.m_Root.PacketCache;
+                        lock (sqe.Root)
+                            p = sqe.Root.PacketCache;
 
                         if (p == null)
                         {
-                            p = new DesignStateDetailed(sqe.m_Serial, sqe.m_Revision, sqe.m_xMin, sqe.m_yMin, sqe.m_xMax, sqe.m_yMax, sqe.m_Tiles);
+                            p = new DesignStateDetailed(sqe.Serial, sqe.Revision, sqe.EnableResponse, sqe.xMin, sqe.yMin, sqe.xMax, sqe.yMax, sqe.Tiles);
                             p.SetStatic();
 
-                            lock (sqe.m_Root)
+                            lock (sqe.Root)
                             {
-                                if (sqe.m_Revision == sqe.m_Root.Revision)
-                                    sqe.m_Root.PacketCache = p;
+                                if (sqe.Revision == sqe.Root.Revision)
+                                    sqe.Root.PacketCache = p;
                             }
                         }
 
-						Timer.DelayCall(sqe.m_NetState.Send, p);
+                        sqe.State.Send(p);
                     }
                     catch (Exception e)
                     {
@@ -2896,10 +2556,10 @@ namespace Server.Multis
             }
         }
 
-        public static void SendDetails(NetState ns, HouseFoundation house, DesignState state)
+        public static void SendDetails(NetState ns, HouseFoundation house, DesignState state, bool response)
         {
             lock (m_SendQueueSyncRoot)
-                m_SendQueue.Enqueue(new SendQueueEntry(ns, house, state));
+                m_SendQueue.Enqueue(new SendQueueEntry(ns, house, state, response));
             m_Sync.Set();
         }
     }

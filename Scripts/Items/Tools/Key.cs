@@ -20,7 +20,7 @@ namespace Server.Items
         uint KeyValue { get; set; }
     }
 
-    public class Key : Item, IResource
+    public class Key : Item, IResource, IQuality
     {
         private string m_Description;
         private uint m_KeyVal;
@@ -288,10 +288,8 @@ namespace Server.Items
             from.Target = t;
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void AddCraftedProperties(ObjectPropertyList list)
         {
-            base.GetProperties(list);
-
             string desc;
 
             if (m_KeyVal == 0)

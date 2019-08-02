@@ -68,7 +68,10 @@ namespace Server.Items
 
             if (m_Label != null && m_Label > 0)
                 TextDefinition.AddTo(list, m_Label);
+        }
 
+        public override void AddUsesRemainingProperties(ObjectPropertyList list)
+        {
             list.Add(1060584, m_UsesRemaining.ToString()); // uses remaining: ~1_val~
         }
 
@@ -136,6 +139,9 @@ namespace Server.Items
                 return true;
 
             if (i.IsArtifact)
+                return true;
+
+            if (i is BaseAddonDeed && ((BaseAddonDeed)i).UseCraftResource && !((BaseAddonDeed)i).IsReDeed && ((BaseAddonDeed)i).Resource != CraftResource.None)
                 return true;
 
             return false;

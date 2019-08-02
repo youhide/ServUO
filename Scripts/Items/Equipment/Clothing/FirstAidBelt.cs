@@ -62,6 +62,8 @@ namespace Server.Items
             {
                 belt.m_Attributes = new AosAttributes(newItem, m_Attributes);
             }
+
+            base.OnAfterDuped(newItem);
         }
 
         public FirstAidBelt(Serial serial)
@@ -90,7 +92,7 @@ namespace Server.Items
 
         private static readonly Type[] m_Bandage = new Type[]
         {
-            typeof(Bandage)
+            typeof(Bandage), typeof(EnhancedBandage)
         };
 
         public bool CheckType(Item item)

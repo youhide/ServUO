@@ -49,7 +49,7 @@ namespace Server.Mobiles
             PackItem(new FertileDirt(Utility.RandomMinMax(1, 5)));
 
             if (Core.ML && Utility.RandomDouble() < .33)
-                PackItem(Engines.Plants.Seed.RandomPeculiarSeed(2));
+                PackItem(Engines.Plants.Seed.RandomPeculiarSeed(3));
 
             Item orepile = null; /* no trust, no love :( */
 
@@ -83,15 +83,10 @@ namespace Server.Mobiles
 					case 1: PackItem( new UnknownMageSkeleton() ); break;
 					case 2: PackItem( new UnknownRogueSkeleton() ); break;
 				}
-			}					
-        }
+			}
 
-        public override bool HasBreath { get { return true; } }
-        public override int BreathPoisonDamage { get { return 100; } }
-        public override int BreathFireDamage { get { return 0; } }
-        public override int BreathEffectHue { get { return 0x3F; } }
-        public override int BreathEffectSound { get { return 0; } }
-        public override int BreathAngerSound { get { return 0; } }
+            SetSpecialAbility(SpecialAbility.DragonBreath);
+        }
 
         public override void OnThink()
         {

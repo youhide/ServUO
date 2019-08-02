@@ -691,6 +691,8 @@ namespace Server.Engines.CityLoyalty
                 }
                 else
                 {
+                    City.Treasury -= CityLoyaltySystem.TradeDealCost;
+
                     City.OnNewTradeDeal(_Deals[id]);
                     City.HeraldMessage(1154058, String.Format("{0}\t#{1}", City.Definition.Name, (int)_Deals[id] - 12));
                 }
@@ -707,7 +709,7 @@ namespace Server.Engines.CityLoyalty
             TradeDeal.MaritimeGuild,
             TradeDeal.MerchantsAssociation,
             TradeDeal.MiningCooperative,
-            TradeDeal.LeageOfRangers,
+            TradeDeal.LeagueOfRangers,
             TradeDeal.GuildOfAssassins,
             TradeDeal.WarriorsGuild,
         };

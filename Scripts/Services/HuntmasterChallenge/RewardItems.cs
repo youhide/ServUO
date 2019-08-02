@@ -156,7 +156,7 @@ namespace Server.Items
             {
                 Item item = null;
 
-                switch (Utility.Random(6))
+                switch (Utility.Random(10))
                 {
                     case 0: item = new SweetPotatoPie(); break;
                     case 1: item = new MashedSweetPotatoes(); break;
@@ -173,6 +173,10 @@ namespace Server.Items
                         new InternalTimer(from);
                         from.Frozen = true;
                         break;
+                    case 6: item = new PottedCoffeePlant(); break;
+                    case 7: item = new RoastingPigOnASpitDeed(); break;
+                    case 8: item = new FormalDiningTableDeed(); break;
+                    case 9: item = new BuffetTableDeed(); break;
                 }
 
                 if (item != null)
@@ -212,10 +216,8 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void AddUsesRemainingProperties(ObjectPropertyList list)
         {
-            base.GetProperties(list);
-
             if(ShowUsesRemaining)
                 list.Add(1049116, m_UsesRemaining.ToString()); // [ Charges: ~1_CHARGES~ ]
         }

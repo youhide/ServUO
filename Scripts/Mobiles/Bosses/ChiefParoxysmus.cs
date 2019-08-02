@@ -65,23 +65,6 @@ namespace Server.Mobiles
                 return Poison.Lethal;
             }
         }
-        public override Poison HitPoison
-        {
-            get
-            {
-                return Poison.Lethal;
-            }
-        }
-
-        public override Poison HitAreaPoison
-        {
-            get
-            {
-                return Poison.Lethal;
-            }
-        }
-
-        public override int AreaPoisonDamage { get { return 50; } }
 
         public override void GenerateLoot()
         {
@@ -192,8 +175,7 @@ namespace Server.Mobiles
         {
             for (int i = 0; i < 3; i++)
             {
-                Mobile blobus = new BulbousPutrification();
-                blobus.MoveToWorld(GetSpawnPosition(4), Map);
+                SpawnHelper(new BulbousPutrification(), GetSpawnPosition(4));
             }
         }
     }
