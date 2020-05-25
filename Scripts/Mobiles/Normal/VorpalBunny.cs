@@ -1,5 +1,5 @@
-using System;
 using Server.Items;
+using System;
 
 namespace Server.Mobiles
 {
@@ -33,23 +33,10 @@ namespace Server.Mobiles
             Fame = 1000;
             Karma = 0;
 
-            VirtualArmor = 4;
-
             DelayBeginTunnel();
 
             ForceActiveSpeed = 0.2;
             ForcePassiveSpeed = 0.4;
-        }
-		
-		public virtual void SpawnPackItems()
-        {
-            int carrots = Utility.RandomMinMax(5, 10);
-            PackItem(new Carrot(carrots));
-
-            if (Utility.Random(5) == 0)
-                PackItem(new BrightlyColoredEggs());
-
-            PackStatue();
         }
 
         public VorpalBunny(Serial serial)
@@ -57,14 +44,16 @@ namespace Server.Mobiles
         {
         }
 
-        public override int Meat { get { return 1; } }
-        public override int Hides { get { return 1; } }
-        public override bool BardImmune { get { return !Core.AOS; } }
-		
+        public override int Meat => 1;
+        public override int Hides => 1;
+
         public override void GenerateLoot()
         {
             AddLoot(LootPack.FilthyRich);
             AddLoot(LootPack.Rich, 2);
+            AddLoot(LootPack.LootItem<Carrot>(100.0, Utility.RandomMinMax(5, 10), false, true));
+            AddLoot(LootPack.LootItem<BrightlyColoredEggs>(20.0, 1, false, true));
+            AddLoot(LootPack.RandomLootItem(Loot.StatueTypes, false, true));
         }
 
         public override IDamageable Combatant
@@ -85,7 +74,6 @@ namespace Server.Mobiles
             }
         }
 
-
         public override bool CheckFlee()
         {
             return DateTime.UtcNow < EndFleeTime;
@@ -93,7 +81,7 @@ namespace Server.Mobiles
 
         public virtual void DelayBeginTunnel()
         {
-            Timer.DelayCall(TimeSpan.FromMinutes(3.0), new TimerCallback(BeginTunnel));
+            Timer.DelayCall(TimeSpan.FromMinutes(3.0), BeginTunnel);
         }
 
         public virtual void BeginTunnel()
@@ -107,7 +95,7 @@ namespace Server.Mobiles
             Say("* The bunny begins to dig a tunnel back to its underground lair *");
             PlaySound(0x247);
 
-            Timer.DelayCall(TimeSpan.FromSeconds(5.0), new TimerCallback(Delete));
+            Timer.DelayCall(TimeSpan.FromSeconds(5.0), Delete);
         }
 
         public override int GetAttackSound() { return 0xC9; }
@@ -118,7 +106,7 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -139,7 +127,7 @@ namespace Server.Mobiles
                 Hue = 1;
                 Name = "a mysterious rabbit hole";
 
-                Timer.DelayCall(TimeSpan.FromSeconds(40.0), new TimerCallback(Delete));
+                Timer.DelayCall(TimeSpan.FromSeconds(40.0), Delete);
             }
 
             public BunnyHole(Serial serial)
@@ -151,7 +139,7 @@ namespace Server.Mobiles
             {
                 base.Serialize(writer);
 
-                writer.Write((int)0);
+                writer.Write(0);
             }
 
             public override void Deserialize(GenericReader reader)

@@ -1,8 +1,7 @@
-﻿using Server;
-using System;
 using Server.Commands;
-using Server.Mobiles;
 using Server.Engines.Quests;
+using Server.Mobiles;
+using System;
 
 namespace Server.Items
 {
@@ -10,13 +9,10 @@ namespace Server.Items
     {
         public static void Initialize()
         {
-            if (Core.HS)
-            {
-                CommandSystem.Register("DecorateHS", AccessLevel.Administrator, GenerateDeco);
-                CommandSystem.Register("DeleteHS", AccessLevel.Administrator, DeleteHS);
+            CommandSystem.Register("DecorateHS", AccessLevel.Administrator, GenerateDeco);
+            CommandSystem.Register("DeleteHS", AccessLevel.Administrator, DeleteHS);
 
-                CommandSystem.Register("CharydbisSpawner", AccessLevel.Administrator, Spawner);
-            }
+            CommandSystem.Register("CharydbisSpawner", AccessLevel.Administrator, Spawner);
         }
 
         public static void Spawner(CommandEventArgs e)
@@ -56,7 +52,7 @@ namespace Server.Items
             WeakEntityCollection.Add(name, altar);
 
             ProfessionalBountyBoard board;
-            
+
             board = new ProfessionalBountyBoard();
             board.MoveToWorld(new Point3D(4544, 2298, -1), Map.Trammel);
             WeakEntityCollection.Add(name, board);

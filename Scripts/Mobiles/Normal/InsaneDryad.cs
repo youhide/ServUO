@@ -1,27 +1,12 @@
-using System;
-using Server.Engines.Plants;
 using Server.Items;
+using System;
 
 namespace Server.Mobiles
 {
     [CorpseName("a dryad's corpse")]
     public class MLDryad : BaseCreature
     {
-        public override bool InitialInnocent
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override OppositionGroup OppositionGroup
-        {
-            get
-            {
-                return OppositionGroup.FeyAndUndead;
-            }
-        }
+        public override bool InitialInnocent => true;
 
         [Constructable]
         public MLDryad()
@@ -57,30 +42,21 @@ namespace Server.Mobiles
 
             Fame = 5000;
             Karma = 5000;
+        }
 
-            VirtualArmor = 28; // Don't know what it should be
-
-            for (int i = 0; i < Utility.RandomMinMax(0, 1); i++)
-            {
-                PackItem(Loot.RandomScroll(0, Loot.ArcanistScrollTypes.Length, SpellbookType.Arcanist));
-            }
-
-            if (Core.ML && Utility.RandomDouble() < .60)
-                PackItem(Seed.RandomPeculiarSeed(1));
+        public MLDryad(Serial serial)
+            : base(serial)
+        {
         }
 
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Rich);
+            AddLoot(LootPack.ArcanistScrolls, 0, 1);
+            AddLoot(LootPack.PeculiarSeed1);
         }
 
-        public override int Meat
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public override int Meat => 1;
 
         public override void OnThink()
         {
@@ -167,22 +143,15 @@ namespace Server.Mobiles
 
         #endregion
 
-        public MLDryad(Serial serial)
-            : base(serial)
-        {
-        }
-
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-
             int version = reader.ReadInt();
         }
     }
@@ -190,19 +159,13 @@ namespace Server.Mobiles
     [CorpseName("an insane dryad corpse")]
     public class InsaneDryad : MLDryad
     {
-        public override bool InitialInnocent
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool InitialInnocent => false;
 
         [Constructable]
         public InsaneDryad()
             : base()
         {
-            Name = "an insane dryad";	
+            Name = "an insane dryad";
             Hue = 0x487;
 
             FightMode = FightMode.Closest;
@@ -210,31 +173,29 @@ namespace Server.Mobiles
             Fame = 7000;
             Karma = -7000;
         }
-		
+
         public InsaneDryad(Serial serial)
             : base(serial)
         {
         }
-		
+
         public override void OnDeath(Container c)
         {
-            base.OnDeath(c);		
-						
-            if (Utility.RandomDouble() < 0.1)				
-                c.DropItem(new ParrotItem());	
+            base.OnDeath(c);
+
+            if (Utility.RandomDouble() < 0.1)
+                c.DropItem(new ParrotItem());
         }
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-			
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-			
             int version = reader.ReadInt();
         }
     }

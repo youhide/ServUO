@@ -1,5 +1,5 @@
-using System;
 using Server.Engines.Craft;
+using System;
 
 namespace Server.Items
 {
@@ -23,12 +23,6 @@ namespace Server.Items
             if (!IsChildOf(from.Backpack))
             {
                 from.SendLocalizedMessage(502437); // Items you wish to cut must be in your backpack.
-                return false;
-            }
-
-            if (Ethics.Ethic.IsImbued(this))
-            {
-                from.SendLocalizedMessage(502440); // Scissors can not be used on that to produce anything.
                 return false;
             }
 
@@ -58,8 +52,9 @@ namespace Server.Items
 
                     return true;
                 }
-                catch
+                catch (Exception e)
                 {
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -67,37 +62,26 @@ namespace Server.Items
             return false;
         }
 
-        public override Race RequiredRace { get { return Race.Gargoyle; } }
-        public override bool CanBeWornByGargoyles { get { return true; } }
+        public override Race RequiredRace => Race.Gargoyle;
+        public override bool CanBeWornByGargoyles => true;
 
         public GargishClothArmsArmor(Serial serial)
             : base(serial)
         {
         }
 
-        public override int BasePhysicalResistance { get { return 5; } }
-        public override int BaseFireResistance { get { return 7; } }
-        public override int BaseColdResistance { get { return 6; } }
-        public override int BasePoisonResistance { get { return 6; } }
-        public override int BaseEnergyResistance { get { return 6; } }
-        public override int InitMinHits { get { return 40; } }
-        public override int InitMaxHits { get { return 50; } }
-        public override int AosStrReq { get { return 20; } }
-        public override int OldStrReq { get { return 20; } }
-        public override int ArmorBase { get { return 18; } }
+        public override int BasePhysicalResistance => 5;
+        public override int BaseFireResistance => 7;
+        public override int BaseColdResistance => 6;
+        public override int BasePoisonResistance => 6;
+        public override int BaseEnergyResistance => 6;
+        public override int InitMinHits => 40;
+        public override int InitMaxHits => 50;
+        public override int StrReq => 20;
 
-        public override ArmorMaterialType MaterialType
-        {
-            get { return ArmorMaterialType.Leather; }
-        }
-        public override CraftResource DefaultResource
-        {
-            get { return CraftResource.None; }
-        }
-        public override ArmorMeditationAllowance DefMedAllowance
-        {
-            get { return ArmorMeditationAllowance.All; }
-        }
+        public override ArmorMaterialType MaterialType => ArmorMaterialType.Leather;
+        public override CraftResource DefaultResource => CraftResource.None;
+        public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
 
         public override int OnCraft(int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, ITool tool, CraftItem craftItem, int resHue)
         {
@@ -107,7 +91,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -140,7 +124,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -174,12 +158,6 @@ namespace Server.Items
                 return false;
             }
 
-            if (Ethics.Ethic.IsImbued(this))
-            {
-                from.SendLocalizedMessage(502440); // Scissors can not be used on that to produce anything.
-                return false;
-            }
-
             CraftSystem system = DefTailoring.CraftSystem;
 
             CraftItem item = system.CraftItems.SearchFor(GetType());
@@ -206,8 +184,9 @@ namespace Server.Items
 
                     return true;
                 }
-                catch
+                catch (Exception e)
                 {
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -215,28 +194,26 @@ namespace Server.Items
             return false;
         }
 
-        public override Race RequiredRace { get { return Race.Gargoyle; } }
-        public override bool CanBeWornByGargoyles { get { return true; } }
+        public override Race RequiredRace => Race.Gargoyle;
+        public override bool CanBeWornByGargoyles => true;
 
         public GargishClothChestArmor(Serial serial)
             : base(serial)
         {
         }
 
-        public override int BasePhysicalResistance { get { return 5; } }
-        public override int BaseFireResistance { get { return 7; } }
-        public override int BaseColdResistance { get { return 6; } }
-        public override int BasePoisonResistance { get { return 6; } }
-        public override int BaseEnergyResistance { get { return 6; } }
-        public override int InitMinHits { get { return 40; } }
-        public override int InitMaxHits { get { return 50; } }
-        public override int AosStrReq { get { return 25; } }
-        public override int OldStrReq { get { return 25; } }
-        public override int ArmorBase { get { return 18; } }
+        public override int BasePhysicalResistance => 5;
+        public override int BaseFireResistance => 7;
+        public override int BaseColdResistance => 6;
+        public override int BasePoisonResistance => 6;
+        public override int BaseEnergyResistance => 6;
+        public override int InitMinHits => 40;
+        public override int InitMaxHits => 50;
+        public override int StrReq => 25;
 
-        public override ArmorMaterialType MaterialType { get { return ArmorMaterialType.Leather; } }
-        public override CraftResource DefaultResource { get { return CraftResource.None; } }
-        public override ArmorMeditationAllowance DefMedAllowance { get { return ArmorMeditationAllowance.All; } }
+        public override ArmorMaterialType MaterialType => ArmorMaterialType.Leather;
+        public override CraftResource DefaultResource => CraftResource.None;
+        public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
 
         public override int OnCraft(int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, ITool tool, CraftItem craftItem, int resHue)
         {
@@ -246,7 +223,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -280,7 +257,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -314,12 +291,6 @@ namespace Server.Items
                 return false;
             }
 
-            if (Ethics.Ethic.IsImbued(this))
-            {
-                from.SendLocalizedMessage(502440); // Scissors can not be used on that to produce anything.
-                return false;
-            }
-
             CraftSystem system = DefTailoring.CraftSystem;
 
             CraftItem item = system.CraftItems.SearchFor(GetType());
@@ -346,8 +317,9 @@ namespace Server.Items
 
                     return true;
                 }
-                catch
+                catch (Exception e)
                 {
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -355,28 +327,26 @@ namespace Server.Items
             return false;
         }
 
-        public override Race RequiredRace { get { return Race.Gargoyle; } }
-        public override bool CanBeWornByGargoyles { get { return true; } }
+        public override Race RequiredRace => Race.Gargoyle;
+        public override bool CanBeWornByGargoyles => true;
 
         public GargishClothLegsArmor(Serial serial)
             : base(serial)
         {
         }
 
-        public override int BasePhysicalResistance { get { return 5; } }
-        public override int BaseFireResistance { get { return 7; } }
-        public override int BaseColdResistance { get { return 6; } }
-        public override int BasePoisonResistance { get { return 6; } }
-        public override int BaseEnergyResistance { get { return 6; } }
-        public override int InitMinHits { get { return 40; } }
-        public override int InitMaxHits { get { return 50; } }
-        public override int AosStrReq { get { return 20; } }
-        public override int OldStrReq { get { return 20; } }
-        public override int ArmorBase { get { return 18; } }
+        public override int BasePhysicalResistance => 5;
+        public override int BaseFireResistance => 7;
+        public override int BaseColdResistance => 6;
+        public override int BasePoisonResistance => 6;
+        public override int BaseEnergyResistance => 6;
+        public override int InitMinHits => 40;
+        public override int InitMaxHits => 50;
+        public override int StrReq => 20;
 
-        public override ArmorMaterialType MaterialType { get { return ArmorMaterialType.Leather; } }
-        public override CraftResource DefaultResource { get { return CraftResource.None; } }        
-        public override ArmorMeditationAllowance DefMedAllowance { get { return ArmorMeditationAllowance.All; } }
+        public override ArmorMaterialType MaterialType => ArmorMaterialType.Leather;
+        public override CraftResource DefaultResource => CraftResource.None;
+        public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
 
         public override int OnCraft(int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, ITool tool, CraftItem craftItem, int resHue)
         {
@@ -386,7 +356,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -420,7 +390,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -454,12 +424,6 @@ namespace Server.Items
                 return false;
             }
 
-            if (Ethics.Ethic.IsImbued(this))
-            {
-                from.SendLocalizedMessage(502440); // Scissors can not be used on that to produce anything.
-                return false;
-            }
-
             CraftSystem system = DefTailoring.CraftSystem;
 
             CraftItem item = system.CraftItems.SearchFor(GetType());
@@ -486,8 +450,9 @@ namespace Server.Items
 
                     return true;
                 }
-                catch
+                catch (Exception e)
                 {
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -495,8 +460,8 @@ namespace Server.Items
             return false;
         }
 
-        public override Race RequiredRace { get { return Race.Gargoyle; } }
-        public override bool CanBeWornByGargoyles { get { return true; } }
+        public override Race RequiredRace => Race.Gargoyle;
+        public override bool CanBeWornByGargoyles => true;
 
         public override int OnCraft(int quality, bool makersMark, Mobile from, CraftSystem craftSystem, Type typeRes, ITool tool, CraftItem craftItem, int resHue)
         {
@@ -508,25 +473,23 @@ namespace Server.Items
         {
         }
 
-        public override int BasePhysicalResistance { get { return 5; } }
-        public override int BaseFireResistance { get { return 7; } }
-        public override int BaseColdResistance { get { return 6; } }
-        public override int BasePoisonResistance { get { return 6; } }
-        public override int BaseEnergyResistance { get { return 6; } }
-        public override int InitMinHits { get { return 40; } }
-        public override int InitMaxHits { get { return 50; } }
-        public override int AosStrReq { get { return 20; } }
-        public override int OldStrReq { get { return 20; } }
-        public override int ArmorBase { get { return 18; } }
+        public override int BasePhysicalResistance => 5;
+        public override int BaseFireResistance => 7;
+        public override int BaseColdResistance => 6;
+        public override int BasePoisonResistance => 6;
+        public override int BaseEnergyResistance => 6;
+        public override int InitMinHits => 40;
+        public override int InitMaxHits => 50;
+        public override int StrReq => 20;
 
-        public override ArmorMaterialType MaterialType { get { return ArmorMaterialType.Leather; } }
-        public override CraftResource DefaultResource { get { return CraftResource.None; } }
-        public override ArmorMeditationAllowance DefMedAllowance { get { return ArmorMeditationAllowance.All; } }
+        public override ArmorMaterialType MaterialType => ArmorMaterialType.Leather;
+        public override CraftResource DefaultResource => CraftResource.None;
+        public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -550,7 +513,7 @@ namespace Server.Items
         {
             Hue = hue;
             Weight = 2.0;
-        }        
+        }
 
         public FemaleGargishClothKiltArmor(Serial serial)
             : base(serial)
@@ -560,7 +523,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)

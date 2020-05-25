@@ -1,7 +1,7 @@
-using System;
 using Server.Engines.Craft;
 using Server.Multis;
 using Server.Targeting;
+using System;
 
 namespace Server.Items
 {
@@ -15,9 +15,6 @@ namespace Server.Items
             : base(0x14F0)
         {
             Weight = 1.0;
-
-            if (!Core.AOS)
-                LootType = LootType.Newbied;
         }
 
         public BaseAddonDeed(Serial serial)
@@ -27,9 +24,9 @@ namespace Server.Items
 
         public abstract BaseAddon Addon { get; }
 
-        public virtual bool UseCraftResource { get { return true; } }
+        public virtual bool UseCraftResource => true;
 
-        public virtual bool ExcludeDeedHue { get { return false; } }
+        public virtual bool ExcludeDeedHue => false;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public CraftResource Resource
@@ -54,7 +51,7 @@ namespace Server.Items
         public bool IsReDeed
         {
             get { return m_ReDeed; }
-            set 
+            set
             {
                 m_ReDeed = value;
 
@@ -174,12 +171,12 @@ namespace Server.Items
                 {
                     BaseAddon addon = m_Deed.Addon;
 
-                    Server.Spells.SpellHelper.GetSurfaceTop(ref p);
+                    Spells.SpellHelper.GetSurfaceTop(ref p);
 
                     BaseHouse house = null;
-                    BaseGalleon boat = null;
+                    BaseGalleon galleon = CheckGalleonPlacement(from, addon, new Point3D(p), map);
 
-                    AddonFitResult res = addon.CouldFit(p, map, from, ref house, ref boat);
+                    AddonFitResult res = galleon != null ? AddonFitResult.Valid : addon.CouldFit(p, map, from, ref house);
 
                     if (res == AddonFitResult.Valid)
                     {
@@ -195,8 +192,9 @@ namespace Server.Items
 
                         if (house != null)
                             house.Addons[addon] = from;
-                        else if (boat != null)
-                            boat.AddAddon(addon);
+
+                        if (galleon != null)
+                            galleon.AddAddon(addon);
 
                         m_Deed.DeleteDeed();
                     }
@@ -208,7 +206,7 @@ namespace Server.Items
                         from.SendLocalizedMessage(500271); // You cannot build near the door.
                     else if (res == AddonFitResult.NoWall)
                         from.SendLocalizedMessage(500268); // This object needs to be mounted on something.
-					
+
                     if (res != AddonFitResult.Valid)
                     {
                         addon.Delete();
@@ -218,6 +216,23 @@ namespace Server.Items
                 {
                     from.SendLocalizedMessage(1042001); // That must be in your pack for you to use it.
                 }
+            }
+
+            public BaseGalleon CheckGalleonPlacement(Mobile from, BaseAddon addon, Point3D p, Map map)
+            {
+                if (addon.Components.Count > 1)
+                {
+                    return null;
+                }
+
+                BaseGalleon galleon = BaseGalleon.FindGalleonAt(p, map);
+
+                if (galleon != null && galleon.CanAddAddon(p))
+                {
+                    return galleon;
+                }
+
+                return null;
             }
         }
     }

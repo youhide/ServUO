@@ -1,6 +1,6 @@
+using Server.Accounting;
 using System;
 using System.IO;
-using Server.Accounting;
 
 namespace Server.Commands
 {
@@ -20,16 +20,10 @@ namespace Server.Commands
                 m_Enabled = value;
             }
         }
-        public static StreamWriter Output
-        {
-            get
-            {
-                return m_Output;
-            }
-        }
+        public static StreamWriter Output => m_Output;
         public static void Initialize()
         {
-            EventSink.Command += new CommandEventHandler(EventSink_Command);
+            EventSink.Command += EventSink_Command;
 
             if (!Directory.Exists("Logs"))
                 Directory.CreateDirectory("Logs");
@@ -49,8 +43,9 @@ namespace Server.Commands
                 m_Output.WriteLine("Log started on {0}", DateTime.UtcNow);
                 m_Output.WriteLine();
             }
-            catch
+            catch (Exception e)
             {
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 
@@ -106,8 +101,9 @@ namespace Server.Commands
                 using (StreamWriter sw = new StreamWriter(path, true))
                     sw.WriteLine("{0}: {1}: {2}", DateTime.UtcNow, from.NetState, text);
             }
-            catch
+            catch (Exception e)
             {
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 

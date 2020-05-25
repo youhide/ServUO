@@ -1,16 +1,14 @@
-using System;
-using Server;
-using Server.Items;
-using Server.Mobiles;
 using Server.Gumps;
+using Server.Mobiles;
 using Server.Network;
+using System;
 
 namespace Server.Engines.NewMagincia
 {
     public class MaginciaLottoGump : Gump
     {
-        private MaginciaHousingPlot m_Plot;
-        private Mobile m_From;
+        private readonly MaginciaHousingPlot m_Plot;
+        private readonly Mobile m_From;
 
         private readonly int BlueColor = 0x00BFFF;
         private readonly int LabelColor = 0xFFFFFF;
@@ -87,8 +85,8 @@ namespace Server.Engines.NewMagincia
             TimeSpan ts = plot.LottoEnds - DateTime.UtcNow;
 
             AddHtmlLocalized(10, 300, 320, 40, 1150476, LabelColor, false, false); // Ticket purchases are NONREFUNDABLE. Odds of winning may vary.
-            
-            if(ts.Days > 0)
+
+            if (ts.Days > 0)
                 AddHtmlLocalized(10, 340, 320, 20, 1150504, ts.Days.ToString(), LabelColor, false, false); // There are ~1_DAYS~ days left before the drawing.
             else
                 AddHtmlLocalized(10, 340, 320, 20, 1150503, LabelColor, false, false); // The lottery drawing will happen in less than 1 day.
@@ -118,13 +116,16 @@ namespace Server.Engines.NewMagincia
                 {
                     toBuy = Convert.ToInt32(text);
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
+                }
 
                 if (toBuy <= 0)
                     return;
             }
 
-            if(toBuy > 1)
+            if (toBuy > 1)
                 total = toBuy * pricePer;
 
             if (Banker.Withdraw(m_From, total))

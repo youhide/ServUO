@@ -1,13 +1,19 @@
-using System;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
+using System;
 
 namespace Server.Engines.Craft
 {
     public class CraftGumpItem : Gump
     {
+        #region Statics
+        private static readonly Type typeofBlankScroll = typeof(BlankScroll);
+        private static readonly Type typeofSpellScroll = typeof(SpellScroll); 
+        #endregion
+
+        #region Variables
         private readonly Mobile m_From;
         private readonly CraftSystem m_CraftSystem;
         private readonly CraftItem m_CraftItem;
@@ -21,7 +27,11 @@ namespace Server.Engines.Craft
 
         private const int GreyLabelColor = 0x3DEF;
 
-        private int m_OtherCount;
+        private bool m_ShowExceptionalChance;
+        private int m_OtherCount; 
+        #endregion
+
+        #region Constructor
 
         public CraftGumpItem(Mobile from, CraftSystem craftSystem, CraftItem craftItem, ITool tool)
             : base(40, 40)
@@ -70,13 +80,11 @@ namespace Server.Engines.Craft
                 AddHtmlLocalized(445, 390, 150, 18, 1044151, LabelColor, false, false); // MAKE NOW
             }
 
-            #region Stygian Abyss
             AddButton(265, 387, 4005, 4007, 2, GumpButtonType.Reply, 0);
             AddHtmlLocalized(300, 390, 150, 18, 1112623, LabelColor, false, false); //MAKE NUMBER
 
             AddButton(135, 387, 4005, 4007, 3, GumpButtonType.Reply, 0);
             AddHtmlLocalized(170, 390, 150, 18, 1112624, LabelColor, false, false); //MAKE MAX
-            #endregion
 
             AddButton(15, 387, 4014, 4016, 0, GumpButtonType.Reply, 0);
             AddHtmlLocalized(50, 390, 150, 18, 1044150, LabelColor, false, false); // BACK
@@ -93,11 +101,6 @@ namespace Server.Engines.Craft
             DrawSkill();
             DrawResource();
 
-            /*
-            if( craftItem.RequiresSE )
-            AddHtmlLocalized( 170, 302 + (m_OtherCount++ * 20), 310, 18, 1063363, LabelColor, false, false ); //* Requires the "Samurai Empire" expansion
-            * */
-
             if (craftItem.RequiredExpansion != Expansion.None)
             {
                 bool supportsEx = (from.NetState != null && from.NetState.SupportsExpansion(craftItem.RequiredExpansion));
@@ -113,9 +116,68 @@ namespace Server.Engines.Craft
                 AddHtmlLocalized(170, 302 + (m_OtherCount++ * 20), 310, 18, 1073620, RedLabelColor, false, false); // You have not learned this recipe.
         }
 
+        #endregion
+
+        #region Overrides
+        public override void OnResponse(NetState sender, RelayInfo info)
+        {
+            switch (info.ButtonID)
+            {
+                case 0: // Back Button
+                    {
+                        CraftGump craftGump = new CraftGump(m_From, m_CraftSystem, m_Tool, null);
+                        m_From.SendGump(craftGump);
+                        break;
+                    }
+                case 1: // Make Button
+                    {
+                        if (m_CraftItem.TryCraft != null)
+                        {
+                            m_CraftItem.TryCraft(m_From, m_CraftItem, m_Tool);
+                            return;
+                        }
+
+                        int num = m_CraftSystem.CanCraft(m_From, m_Tool, m_CraftItem.ItemType);
+
+                        if (num > 0)
+                        {
+                            m_From.SendGump(new CraftGump(m_From, m_CraftSystem, m_Tool, num));
+                        }
+                        else
+                        {
+                            Type type = null;
+
+                            CraftContext context = m_CraftSystem.GetContext(m_From);
+
+                            if (context != null)
+                            {
+                                CraftSubResCol res = (m_CraftItem.UseSubRes2 ? m_CraftSystem.CraftSubRes2 : m_CraftSystem.CraftSubRes);
+                                int resIndex = (m_CraftItem.UseSubRes2 ? context.LastResourceIndex2 : context.LastResourceIndex);
+
+                                if (resIndex > -1)
+                                    type = res.GetAt(resIndex).ItemType;
+                            }
+
+                            m_CraftSystem.CreateItem(m_From, m_CraftItem.ItemType, type, m_Tool, m_CraftItem);
+                        }
+                        break;
+                    }
+                case 2: //Make Number
+                    m_From.Prompt = new MakeNumberCraftPrompt(m_From, m_CraftSystem, m_CraftItem, m_Tool);
+                    m_From.SendLocalizedMessage(1112576); //Please type the amount you wish to create(1 - 100): <Escape to cancel>
+                    break;
+                case 3: //Make Max
+                    AutoCraftTimer.EndTimer(m_From);
+                    new AutoCraftTimer(m_From, m_CraftSystem, m_CraftItem, m_Tool, 9999, TimeSpan.FromSeconds(m_CraftSystem.Delay * m_CraftSystem.MaxCraftEffect + 1.0), TimeSpan.FromSeconds(m_CraftSystem.Delay * m_CraftSystem.MaxCraftEffect + 1.0));
+                    break;
+            }
+        }
+        #endregion
+
+        #region Methods
         private TextDefinition RequiredExpansionMessage(Expansion expansion)
         {
-            switch( expansion )
+            switch (expansion)
             {
                 case Expansion.SE:
                     return 1063363; // * Requires the "Samurai Empire" expansion
@@ -146,8 +208,6 @@ namespace Server.Engines.Craft
                     return String.Format("Requires the \"{0}\" theme pack.", null);
             }
         }
-
-        private bool m_ShowExceptionalChance;
 
         public void DrawItem()
         {
@@ -214,9 +274,6 @@ namespace Server.Engines.Craft
             }
         }
 
-        private static readonly Type typeofBlankScroll = typeof(BlankScroll);
-        private static readonly Type typeofSpellScroll = typeof(SpellScroll);
-
         public void DrawResource()
         {
             bool retainedColor = false;
@@ -244,7 +301,7 @@ namespace Server.Engines.Craft
                 type = craftResource.ItemType;
                 nameString = craftResource.NameString;
                 nameNumber = craftResource.NameNumber;
-				
+
                 // Resource Mutation
                 if (type == res.ResType && resIndex > -1)
                 {
@@ -283,60 +340,8 @@ namespace Server.Engines.Craft
 
             if (cropScroll)
                 AddHtmlLocalized(170, 302 + (m_OtherCount++ * 20), 360, 18, 1044379, LabelColor, false, false); // Inscribing scrolls also requires a blank scroll and mana.
-        }
+        } 
+        #endregion
 
-        public override void OnResponse(NetState sender, RelayInfo info)
-        {
-            switch (info.ButtonID)
-            {
-                case 0: // Back Button
-                    {
-                        CraftGump craftGump = new CraftGump(m_From, m_CraftSystem, m_Tool, null);
-                        m_From.SendGump(craftGump);
-                        break;
-                    }
-                case 1: // Make Button
-                    {
-                        if (m_CraftItem.TryCraft != null)
-                        {
-                            m_CraftItem.TryCraft(m_From, m_CraftItem, m_Tool);
-                            return;
-                        }
-                        
-                        int num = m_CraftSystem.CanCraft(m_From, m_Tool, m_CraftItem.ItemType);
-
-                        if (num > 0)
-                        {
-                            m_From.SendGump(new CraftGump(m_From, m_CraftSystem, m_Tool, num));
-                        }
-                        else
-                        {
-                            Type type = null;
-
-                            CraftContext context = m_CraftSystem.GetContext(m_From);
-
-                            if (context != null)
-                            {
-                                CraftSubResCol res = (m_CraftItem.UseSubRes2 ? m_CraftSystem.CraftSubRes2 : m_CraftSystem.CraftSubRes);
-                                int resIndex = (m_CraftItem.UseSubRes2 ? context.LastResourceIndex2 : context.LastResourceIndex);
-
-                                if (resIndex > -1)
-                                    type = res.GetAt(resIndex).ItemType;
-                            }
-
-                            m_CraftSystem.CreateItem(m_From, m_CraftItem.ItemType, type, m_Tool, m_CraftItem);
-                        }
-                        break;
-                    }
-                case 2: //Make Number
-                    m_From.Prompt = new MakeNumberCraftPrompt(m_From, m_CraftSystem, m_CraftItem, m_Tool);
-                    m_From.SendLocalizedMessage(1112576); //Please type the amount you wish to create(1 - 100): <Escape to cancel>
-                    break;
-                case 3: //Make Max
-                    AutoCraftTimer.EndTimer(m_From);
-                    new AutoCraftTimer(m_From, m_CraftSystem, m_CraftItem, m_Tool, 9999, TimeSpan.FromSeconds(m_CraftSystem.Delay * m_CraftSystem.MaxCraftEffect + 1.0), TimeSpan.FromSeconds(m_CraftSystem.Delay * m_CraftSystem.MaxCraftEffect + 1.0));
-                    break;
-            }
-        }
     }
 }

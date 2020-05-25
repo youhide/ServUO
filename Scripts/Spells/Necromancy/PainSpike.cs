@@ -1,9 +1,7 @@
+using Server.Spells.SkillMasteries;
+using Server.Targeting;
 using System;
 using System.Collections.Generic;
-
-using Server;
-using Server.Targeting;
-using Server.Spells.SkillMasteries;
 
 namespace Server.Spells.Necromancy
 {
@@ -23,34 +21,10 @@ namespace Server.Spells.Necromancy
         {
         }
 
-        public override TimeSpan CastDelayBase
-        {
-            get
-            {
-                return TimeSpan.FromSeconds(1.25);
-            }
-        }
-        public override double RequiredSkill
-        {
-            get
-            {
-                return 20.0;
-            }
-        }
-        public override int RequiredMana
-        {
-            get
-            {
-                return 5;
-            }
-        }
-        public override bool DelayedDamage
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(1.25);
+        public override double RequiredSkill => 20.0;
+        public override int RequiredMana => 5;
+        public override bool DelayedDamage => false;
         public override void OnCast()
         {
             Caster.Target = new InternalTarget(this);
@@ -148,7 +122,7 @@ namespace Server.Spells.Necromancy
                         m_Mobile.Hits += m_ToRestore;
 
                     BuffInfo.RemoveBuff(m_Mobile, BuffIcon.PainSpike);
-                    
+
                     Stop();
                 }
             }
@@ -158,7 +132,7 @@ namespace Server.Spells.Necromancy
         {
             private readonly PainSpikeSpell m_Owner;
             public InternalTarget(PainSpikeSpell owner)
-                : base(Core.ML ? 10 : 12, false, TargetFlags.Harmful)
+                : base(10, false, TargetFlags.Harmful)
             {
                 m_Owner = owner;
             }

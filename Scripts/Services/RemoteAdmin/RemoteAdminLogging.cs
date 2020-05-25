@@ -1,7 +1,7 @@
-using System;
-using System.IO;
 using Server.Accounting;
 using Server.Network;
+using System;
+using System.IO;
 
 namespace Server.RemoteAdmin
 {
@@ -23,13 +23,7 @@ namespace Server.RemoteAdmin
                 m_Enabled = value;
             }
         }
-        public static StreamWriter Output
-        {
-            get
-            {
-                return m_Output;
-            }
-        }
+        public static StreamWriter Output => m_Output;
         public static void LazyInitialize()
         {
             if (Initialized || !m_Enabled)
@@ -54,11 +48,10 @@ namespace Server.RemoteAdmin
                 m_Output.WriteLine("Log started on {0}", DateTime.UtcNow);
                 m_Output.WriteLine();
             }
-            catch
+            catch (Exception e)
             {
-                Utility.PushColor(ConsoleColor.Red);
                 Console.WriteLine("RemoteAdminLogging: Failed to initialize LogWriter.");
-                Utility.PopColor();
+                Server.Diagnostics.ExceptionLogging.LogException(e);
                 m_Enabled = false;
             }
         }
@@ -106,8 +99,9 @@ namespace Server.RemoteAdmin
                 using (StreamWriter sw = new StreamWriter(path, true))
                     sw.WriteLine("{0}: {1}: {2}", DateTime.UtcNow, statestr, text);
             }
-            catch
+            catch (Exception e)
             {
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
     }

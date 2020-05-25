@@ -1,5 +1,4 @@
 using System;
-using Server.Items;
 
 namespace Server.Mobiles
 {
@@ -31,8 +30,6 @@ namespace Server.Mobiles
 
             Fame = 1000;
             Karma = 0;
-
-            VirtualArmor = 4;
         }
 
         public override IDamageable Combatant
@@ -54,8 +51,8 @@ namespace Server.Mobiles
         {
         }
 
-        public override int Meat { get { return 1; } }
-        public override int Hides { get { return 1; } }
+        public override int Meat => 1;
+        public override int Hides => 1;
 
         public override int GetAttackSound()
         {
@@ -75,14 +72,12 @@ namespace Server.Mobiles
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-
             int version = reader.ReadInt();
         }
     }

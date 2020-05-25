@@ -1,15 +1,14 @@
-using System;
-using Server;
+using Server.ContextMenus;
 using Server.Multis;
 using Server.Network;
-using Server.ContextMenus;
+using System;
 using System.Collections.Generic;
 
 namespace Server.Items
 {
     public class TillerMan : Item
     {
-        public virtual bool Babbles { get { return true; } }
+        public virtual bool Babbles => true;
         public BaseBoat Boat { get; private set; }
         private DateTime _NextBabble;
 
@@ -40,8 +39,11 @@ namespace Server.Items
         {
             base.GetProperties(list);
 
+            if (Boat.IsRowBoat)
+                return;
+
             list.Add(Boat.Status);
-            list.Add(1116580 + (int)Boat.DamageTaken); //State: Prisine
+            list.Add(1116580 + (int)Boat.DamageTaken); //State: Prisine            
         }
 
         public virtual void Say(int number)
@@ -62,39 +64,56 @@ namespace Server.Items
                 base.AddNameProperty(list);
         }
 
-        public override void OnSingleClick(Mobile from)
-        {
-            if (Boat != null && Boat.ShipName != null)
-                LabelTo(from, 1042884, Boat.ShipName); // the tiller man of the ~1_SHIP_NAME~
-            else
-                base.OnSingleClick(from);
-        }
+        public Mobile Pilot => Boat != null ? Boat.Pilot : null;
 
-        public Mobile Pilot { get { return Boat != null ? Boat.Pilot : null; } }
+        public override void OnDoubleClickDead(Mobile m)
+        {
+            OnDoubleClick(m);
+        }
 
         public override void OnDoubleClick(Mobile from)
         {
+            from.RevealingAction();
+
             BaseBoat boat = BaseBoat.FindBoatAt(from, from.Map);
             Item mount = from.FindItemOnLayer(Layer.Mount);
 
-            if (!from.InRange(Location, 3))
-                from.SendLocalizedMessage(500295); //You are too far away to do that.
-            else if (boat == null || Boat != boat || Boat == null)
-                from.SendLocalizedMessage(1116724); //You cannot pilot a ship unless you are aboard it!
-            else if (boat.Owner != from)
-                from.SendLocalizedMessage(1116726); //This is not your ship!
+            if (boat == null || Boat == null || Boat != boat)
+            {
+                from.SendLocalizedMessage(1116724); // You cannot pilot a ship unless you are aboard it!
+            }
+            else if (Pilot != null && Pilot != from && Pilot == Boat.Owner)
+            {
+                from.SendLocalizedMessage(502221); // Someone else is already using this item.
+            }
             else if (from.Flying)
+            {
                 from.SendLocalizedMessage(1116615); // You cannot pilot a ship while flying!
+            }
             else if (from.Mounted && !(mount is BoatMountItem))
-                from.SendLocalizedMessage(1010097); //You cannot use this while mounted or flying. 
-            else if (from != Pilot && Pilot != null && Pilot == Boat.Owner)
-                from.SendMessage("Someone is already piloting this vessle!");
+            {
+                from.SendLocalizedMessage(1010097); // You cannot use this while mounted or flying.
+            }
             else if (Pilot == null && Boat.Scuttled)
-                from.SendLocalizedMessage(1116725); //This ship is too damaged to sail!
+            {
+                from.SendLocalizedMessage(1116725); // This ship is too damaged to sail!
+            }
             else if (Pilot != null)
-                boat.RemovePilot(from);
+            {
+                if (from != Pilot) // High authorized player takes control of the ship
+                {
+                    boat.RemovePilot(from);
+                    boat.LockPilot(from);
+                }
+                else
+                {
+                    boat.RemovePilot(from);
+                }
+            }
             else
+            {
                 boat.LockPilot(from);
+            }
         }
 
         public override bool OnDragDrop(Mobile from, Item dropped)
@@ -117,16 +136,23 @@ namespace Server.Items
         {
             base.GetContextMenuEntries(from, list);
 
-            if (Boat != null && (Boat.Owner == from || from.AccessLevel > AccessLevel.Player))
+            if (Boat.IsRowBoat)
+                return;
+
+            if (Boat != null)
             {
                 if (Boat.Contains(from))
                 {
-                    list.Add(new RenameShipEntry(this, from));
+                    if (Boat.IsOwner(from))
+                        list.Add(new RenameShipEntry(this, from));
+
                     list.Add(new EmergencyRepairEntry(this, from));
                     list.Add(new ShipRepairEntry(this, from));
                 }
-                else
+                else if (Boat.IsOwner(from))
+                {
                     list.Add(new DryDockEntry(Boat, from));
+                }
             }
         }
 
@@ -158,8 +184,8 @@ namespace Server.Items
 
         private class EmergencyRepairEntry : ContextMenuEntry
         {
-            private TillerMan m_TillerMan;
-            private Mobile m_From;
+            private readonly TillerMan m_TillerMan;
+            private readonly Mobile m_From;
 
             public EmergencyRepairEntry(TillerMan tillerman, Mobile from)
                 : base(1116589, 5)
@@ -189,8 +215,8 @@ namespace Server.Items
 
         private class ShipRepairEntry : ContextMenuEntry
         {
-            private TillerMan m_TillerMan;
-            private Mobile m_From;
+            private readonly TillerMan m_TillerMan;
+            private readonly Mobile m_From;
 
             public ShipRepairEntry(TillerMan tillerman, Mobile from)
                 : base(1116590, 5)
@@ -215,7 +241,7 @@ namespace Server.Items
 
         private class RenameShipEntry : ContextMenuEntry
         {
-            private TillerMan m_TillerMan;
+            private readonly TillerMan m_TillerMan;
             private readonly Mobile m_From;
 
             public RenameShipEntry(TillerMan tillerman, Mobile from)
@@ -232,29 +258,10 @@ namespace Server.Items
             }
         }
 
-        private class DryDockEntry : ContextMenuEntry
-        {
-            private readonly Mobile m_From;
-            private BaseBoat m_Boat;
-
-            public DryDockEntry(BaseBoat boat, Mobile from)
-                : base(1116520, 12)
-            {
-                m_From = from;
-                m_Boat = boat;
-            }
-
-            public override void OnClick()
-            {
-                if (m_Boat != null && !m_Boat.Contains(m_From))
-                    m_Boat.BeginDryDock(m_From);
-            }
-        }
-
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);//version
+            writer.Write(0);//version
 
             writer.Write(Boat);
         }

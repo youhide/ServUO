@@ -1,4 +1,3 @@
-using System;
 using Server.Items;
 
 namespace Server.Mobiles
@@ -12,7 +11,7 @@ namespace Server.Mobiles
         {
             Name = "a minotaur scout";
             Body = 281;
-		   
+
             SetStr(353, 375);
             SetDex(111, 130);
             SetInt(34, 50);
@@ -37,13 +36,6 @@ namespace Server.Mobiles
             Fame = 5000;
             Karma = -5000;
 
-            VirtualArmor = 28; // Don't know what it should be
-
-            for (int i = 0; i < Utility.RandomMinMax(0, 1); i++)
-            {
-                PackItem(Loot.RandomScroll(0, Loot.ArcanistScrollTypes.Length, SpellbookType.Arcanist));
-            }
-
             SetWeaponAbility(WeaponAbility.ParalyzingBlow);
         }
 
@@ -51,12 +43,13 @@ namespace Server.Mobiles
             : base(serial)
         {
         }
-		
-		public override int TreasureMapLevel { get { return 3; } }
+
+        public override int TreasureMapLevel => 3;
 
         public override void GenerateLoot()
         {
-            AddLoot(LootPack.Rich);  // Need to verify
+            AddLoot(LootPack.Rich);
+            AddLoot(LootPack.ArcanistScrolls, 0, 1);
         }
 
         // Using Tormented Minotaur sounds - Need to veryfy
@@ -88,7 +81,7 @@ namespace Server.Mobiles
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)

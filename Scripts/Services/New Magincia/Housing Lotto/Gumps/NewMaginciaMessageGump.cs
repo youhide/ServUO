@@ -1,7 +1,6 @@
-using System;
-using Server;
 using Server.Gumps;
 using Server.Mobiles;
+using System;
 using System.Collections.Generic;
 
 namespace Server.Engines.NewMagincia
@@ -11,12 +10,12 @@ namespace Server.Engines.NewMagincia
         public List<NewMaginciaMessage> Messages;
 
         public readonly int LightBlueColor = 0x4AFD;
-        public readonly int GreenColor = 0x4BB7;        
+        public readonly int GreenColor = 0x4BB7;
 
         public NewMaginciaMessageGump(PlayerMobile from)
             : base(from, 490, 30)
         {
-            Messages = MaginciaLottoSystem.GetMessages(from);            
+            Messages = MaginciaLottoSystem.GetMessages(from);
         }
 
         public override void AddGumpLayout()
@@ -62,7 +61,7 @@ namespace Server.Engines.NewMagincia
             : base(from, 490, 30)
         {
             Widescreen = widescreen;
-            Messages = MaginciaLottoSystem.GetMessages(from);            
+            Messages = MaginciaLottoSystem.GetMessages(from);
         }
 
         public override void AddGumpLayout()
@@ -92,12 +91,23 @@ namespace Server.Engines.NewMagincia
                 if (page > 1)
                     AddButton(Widescreen ? 446 : 246, 7, 0x1458, 0x1458, 0, GumpButtonType.Page, page - 1);
 
-                var message = Messages[i];
+                NewMaginciaMessage message = Messages[i];
 
                 if (message == null)
                     continue;
 
-                if (message.Body.Number > 0)
+                if (message.Title != null)
+                {
+                    if (message.Title.Number > 0)
+                    {
+                        AddHtmlLocalized(47, 34 + (y * 32), 260 + width, 16, message.Title, LightBlueColor, false, false);
+                    }
+                    else
+                    {
+                        AddHtml(40, 34 + (y * 32), 260 + width, 16, Color("#94BDEF", message.Title.String), false, false);
+                    }
+                }
+                else if (message.Body.Number > 0)
                 {
                     if (message.Args == null)
                     {
@@ -173,8 +183,6 @@ namespace Server.Engines.NewMagincia
         {
             Messages = messages;
             Message = messages[messageid];
-
-            
         }
 
         public override void AddGumpLayout()
@@ -186,7 +194,23 @@ namespace Server.Engines.NewMagincia
                 AddBackground(0, 0, 414, 341, 0x24B8);
                 AddButton(7, 7, 0x1523, 0x1523, 0, GumpButtonType.Reply, 0);
                 AddButton(390, 7, 0x1519, 0x151A, 1, GumpButtonType.Reply, 0);
-                AddHtmlLocalized(47, 7, 360, 18, 1150425, String.Format("{0}", Messages.Count), GreenColor, false, false); // ~1_COUNT~ Messages
+
+                if (Message.Title != null)
+                {
+                    if (Message.Title.Number != 0)
+                    {
+                        AddHtmlLocalized(47, 7, 360, 20, Message.Body.Number, Message.Args, GreenColor, false, false);
+                    }
+                    else
+                    {
+                        AddHtml(47, 7, 360, 150, Color(C16232(GreenColor), Message.Title.String), false, false);
+                    }
+
+                }
+                else
+                {
+                    AddHtmlLocalized(47, 7, 360, 18, 1150425, String.Format("{0}", Messages.Count), GreenColor, false, false); // ~1_COUNT~ Messages
+                }
 
                 if (Message.Body != null)
                 {

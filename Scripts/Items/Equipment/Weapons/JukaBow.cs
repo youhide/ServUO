@@ -1,5 +1,3 @@
-using System;
-
 namespace Server.Items
 {
     [FlipableAttribute(0x13B2, 0x13B1)]
@@ -15,10 +13,8 @@ namespace Server.Items
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsModified => Slayer != SlayerName.None;
-        public override int AosStrengthReq => 80;
-        public override int AosDexterityReq => 80;
-        public override int OldStrengthReq => 80;
-        public override int OldDexterityReq => 80;
+        public override int StrengthReq => 80;
+        public override int DexterityReq => 80;
 
         public override bool CanEquip(Mobile from)
         {
@@ -47,7 +43,7 @@ namespace Server.Items
             }
             else
             {
-                from.BeginTarget(2, false, Targeting.TargetFlags.None, new TargetCallback(OnTargetGears));
+                from.BeginTarget(2, false, Targeting.TargetFlags.None, OnTargetGears);
                 from.SendMessage("Select the gears you wish to use.");
             }
         }

@@ -7,12 +7,11 @@ namespace Server.Items
     {
         private Timer m_Timer;
 
-        public override int DefaultGumpID { get { return 0x49; } }
-        public bool CheckWhenHidden { get { return true; } }
+        public bool CheckWhenHidden => true;
 
         [Constructable]
         public KhaldunChest()
-            : base(Utility.RandomList(0xE3C, 0xE3E, 0x9a9))
+            : base(Utility.RandomList(0xE3C, 0xE3D, 0xE3E, 0xE3F, 0xE40, 0xE41, 0xE42, 0xE43))
         {
             Movable = false;
             Locked = true;
@@ -25,10 +24,9 @@ namespace Server.Items
             LockLevel = 90;
             RequiredSkill = 90;
             MaxLockLevel = 100;
-            
+
             TrapType = TrapType.PoisonTrap;
             TrapPower = 100;
-            Timer.DelayCall(TimeSpan.FromSeconds(1), Fill);
         }
 
         public virtual void Fill()
@@ -37,7 +35,7 @@ namespace Server.Items
 
             List<Item> contains = new List<Item>(Items);
 
-            foreach (var i in contains)
+            foreach (Item i in contains)
             {
                 i.Delete();
             }
@@ -113,6 +111,23 @@ namespace Server.Items
                     DropItem(item);
                 }
             }
+
+            if (0.01 > Utility.RandomDouble())
+            {
+                switch (Utility.Random(4))
+                {
+                    case 0:
+                        item = new RelicOfHydros(); break;
+                    case 1:
+                        item = new RelicOfLithos(); break;
+                    case 2:
+                        item = new RelicOfPyros(); break;
+                    case 3:
+                        item = new RelicOfStratos(); break;
+                }
+
+                DropItem(item);
+            }
         }
 
         public void Reset()
@@ -155,23 +170,25 @@ namespace Server.Items
 
         public override void LockPick(Mobile from)
         {
-            TryDelayedLock();
+            Fill();
 
             base.LockPick(from);
+
+            DelayedDelete();
         }
 
         public KhaldunChest(Serial serial) : base(serial)
         {
-        }        
+        }
 
-        public void TryDelayedLock()
+        public void DelayedDelete()
         {
             if (Locked || (m_Timer != null && m_Timer.Running))
                 return;
 
             EndTimer();
 
-            m_Timer = Timer.DelayCall(TimeSpan.FromMinutes(Utility.RandomMinMax(10, 15)), Fill);
+            m_Timer = Timer.DelayCall(TimeSpan.FromMinutes(5), Delete);
         }
 
         public void EndTimer()
@@ -183,20 +200,28 @@ namespace Server.Items
             }
         }
 
+        public override void Delete()
+        {
+            if (Spawner != null)
+            {
+                Spawner.Remove(this);
+            }
+
+            base.Delete();
+        }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0); // version
-
-            TryDelayedLock();
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt();
 
-            TryDelayedLock();
+            Delete();
         }
     }
 }

@@ -1,9 +1,7 @@
-using System;
-using Server;
-using Server.Multis;
-using System.Collections.Generic;
 using Server.Items;
-using Server.Misc;
+using Server.Multis;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Server.Mobiles
@@ -14,26 +12,26 @@ namespace Server.Mobiles
         public static readonly TimeSpan TeleportRate = TimeSpan.FromSeconds(60);
         public static readonly int SpawnMax = 25;
 
-        private List<Mobile> m_Tentacles = new List<Mobile>();
+        private readonly List<Mobile> m_Tentacles = new List<Mobile>();
         private DateTime m_NextSpawn;
         private DateTime m_NextTeleport;
 
-        public override bool CanDamageBoats { get { return true; } }
-        public override TimeSpan BoatDamageCooldown { get { return TimeSpan.FromSeconds(Utility.RandomMinMax(45, 80)); } }
-        public override int MinBoatDamage { get { return 5; } }
-        public override int MaxBoatDamage { get { return 15; } }
-        public override int DamageRange { get { return 10; } }
+        public override bool CanDamageBoats => true;
+        public override TimeSpan BoatDamageCooldown => TimeSpan.FromSeconds(Utility.RandomMinMax(45, 80));
+        public override int MinBoatDamage => 5;
+        public override int MaxBoatDamage => 15;
+        public override int DamageRange => 10;
 
-        public override int Meat { get { return 5; } }
-        public override double TreasureMapChance { get { return .50; } }
-        public override int TreasureMapLevel { get { return 7; } }
+        public override int Meat => 5;
+        public override double TreasureMapChance => .50;
+        public override int TreasureMapLevel => 7;
 
-        public override Type[] UniqueList { get { return new Type[] { typeof(FishermansHat), typeof(FishermansVest), typeof(FishermansEelskinGloves), typeof(FishermansTrousers) }; } }
-        public override Type[] SharedList { get { return new Type[] { typeof(HelmOfVengence), typeof(RingOfTheSoulbinder), typeof(RuneEngravedPegLeg), typeof(CullingBlade) }; } }
-        public override Type[] DecorativeList { get { return new Type[] { typeof(EnchantedBladeDeed), typeof(EnchantedVortexDeed) }; } }
+        public override Type[] UniqueList => new Type[] { typeof(FishermansHat), typeof(FishermansVest), typeof(FishermansEelskinGloves), typeof(FishermansTrousers) };
+        public override Type[] SharedList => new Type[] { typeof(HelmOfVengence), typeof(RingOfTheSoulbinder), typeof(RuneEngravedPegLeg), typeof(CullingBlade) };
+        public override Type[] DecorativeList => new Type[] { typeof(EnchantedBladeDeed), typeof(EnchantedVortexDeed) };
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public int Tentacles { get { return m_Tentacles.Count; } }
+        public int Tentacles => m_Tentacles.Count;
 
         [Constructable]
         public Charydbis() : this(null) { }
@@ -73,10 +71,10 @@ namespace Server.Mobiles
             SetSkill(SkillName.Wrestling, 120.1, 121.2);
             SetSkill(SkillName.Tactics, 120.15, 123.1);
             SetSkill(SkillName.MagicResist, 165.2, 178.7);
-            SetSkill(SkillName.Anatomy, 111.0, 111.7);
+            SetSkill(SkillName.Anatomy, 24.4, 25.6);
             SetSkill(SkillName.Magery, 134.6, 140.5);
-            SetSkill(SkillName.EvalInt, 200.8, 243.6);
-            SetSkill(SkillName.Meditation, 565);
+            SetSkill(SkillName.EvalInt, 135.6, 144.9);
+            SetSkill(SkillName.Meditation, 22.8, 70.3);
 
             Fame = 32000;
             Karma = -32000;
@@ -110,7 +108,7 @@ namespace Server.Mobiles
 
         public void DoTeleport()
         {
-            var combatant = Combatant as Mobile;
+            Mobile combatant = Combatant as Mobile;
 
             if (combatant == null)
             {
@@ -127,7 +125,7 @@ namespace Server.Mobiles
 
             DoAreaLightningAttack(combatant);
 
-            Timer.DelayCall<Mobile>(TimeSpan.FromSeconds(3), FinishTeleport, combatant);
+            Timer.DelayCall(TimeSpan.FromSeconds(3), FinishTeleport, combatant);
             m_NextTeleport = DateTime.UtcNow + TeleportRate;
         }
 
@@ -199,12 +197,12 @@ namespace Server.Mobiles
 
             if (boat != null)
             {
-                foreach (var mob in boat.GetMobilesOnBoard().Where(m => CanBeHarmful(m, false) && m.Alive))
+                foreach (Mobile mob in boat.MobilesOnBoard.Where(m => CanBeHarmful(m, false) && m.Alive))
                 {
-                    double damage = Math.Max(40, Utility.RandomMinMax(50, 100) * ((double)Hits / (double)HitsMax));
+                    double damage = Math.Max(40, Utility.RandomMinMax(50, 100) * (Hits / (double)HitsMax));
 
                     mob.BoltEffect(0);
-                    AOS.Damage((Mobile)mob, this, (int)damage, false, 0, 0, 0, 0, 0, 0, 100, false, false, false);
+                    AOS.Damage(mob, this, (int)damage, false, 0, 0, 0, 0, 0, 0, 100, false, false, false);
                     mob.FixedParticles(0x36BD, 20, 10, 5044, EffectLayer.Head);
                 }
             }
@@ -231,15 +229,15 @@ namespace Server.Mobiles
 
         private bool m_HasPushed;
 
-        public override void DoDamageBoat(BaseGalleon galleon)
+        public override void DoDamageBoat(BaseBoat boat)
         {
-            if (galleon == null)
+            if (boat == null)
                 return;
 
             m_HasPushed = false;
-            IPoint2D pnt = galleon;
+            IPoint2D pnt = boat;
 
-            if(Combatant != null && galleon.Contains(Combatant))
+            if (Combatant != null && boat.Contains(Combatant))
                 pnt = Combatant;
 
             Direction dir = Utility.GetDirection(this, pnt);
@@ -334,13 +332,14 @@ namespace Server.Mobiles
 
                     if (Spells.SpellHelper.CheckMulti(p, Map))
                     {
-                        BaseGalleon galleon = BaseGalleon.FindGalleonAt(p, Map);
-                        if (galleon != null && !m_HasPushed)
+                        BaseBoat boat = BaseBoat.FindBoatAt(p, Map);
+
+                        if (boat != null && !m_HasPushed)
                         {
                             int damage = Utility.RandomMinMax(MinBoatDamage, MaxBoatDamage);
-                            galleon.OnTakenDamage(this, damage);
+                            boat.OnTakenDamage(this, damage);
 
-                            galleon.StartMove(dir, 1,0x2, galleon.SlowDriftInterval, true, false);
+                            boat.StartMove(dir, 1, 0x2, boat.SlowDriftInterval, true, false);
                             m_HasPushed = true;
                         }
                         continue;
@@ -376,16 +375,10 @@ namespace Server.Mobiles
                 SetResistance(ResistanceType.Poison, 100);
                 SetResistance(ResistanceType.Energy, 100);
 
-                Timer.DelayCall(TimeSpan.FromSeconds(2), new TimerCallback(DoDelete));
+                Timer.DelayCall(TimeSpan.FromSeconds(2), DoDelete);
             }
 
-            public override bool DeleteCorpseOnDeath
-            {
-                get
-                {
-                    return true;
-                }
-            }
+            public override bool DeleteCorpseOnDeath => true;
 
             public void DoDelete()
             {
@@ -403,14 +396,14 @@ namespace Server.Mobiles
                 base.OnDelete();
             }
 
-            public override bool AutoDispel { get { return true; } }
-            public override double AutoDispelChance { get { return 1.0; } }
-            public override bool BardImmune { get { return true; } }
-            public override bool Unprovokable { get { return true; } }
-            public override bool Uncalmable { get { return true; } }
-            public override Poison PoisonImmune { get { return Poison.Lethal; } }
-            
-            public override int Meat { get { return 1; } }
+            public override bool AutoDispel => true;
+            public override double AutoDispelChance => 1.0;
+            public override bool BardImmune => true;
+            public override bool Unprovokable => true;
+            public override bool Uncalmable => true;
+            public override Poison PoisonImmune => Poison.Lethal;
+
+            public override int Meat => 1;
 
             public EffectSpawn(Serial serial)
                 : base(serial)
@@ -420,7 +413,7 @@ namespace Server.Mobiles
             public override void Serialize(GenericWriter writer)
             {
                 base.Serialize(writer);
-                writer.Write((int)0);
+                writer.Write(0);
             }
 
             public override void Deserialize(GenericReader reader)
@@ -432,10 +425,11 @@ namespace Server.Mobiles
 
         private class EffectsTimer : Timer
         {
-            private Direction m_Dir;
-            private int m_I, m_IMax;
-            private Point3DList m_Path;
-            private Charydbis m_Mobile;
+            private readonly Direction m_Dir;
+            private int m_I;
+            private readonly int m_IMax;
+            private readonly Point3DList m_Path;
+            private readonly Charydbis m_Mobile;
 
             public EffectsTimer(Charydbis mobile, Point3DList path, Direction dir, int imax)
                 : base(TimeSpan.FromSeconds(0.25), TimeSpan.FromSeconds(0.25))
@@ -587,10 +581,7 @@ namespace Server.Mobiles
             BaseRunicTool.ApplyAttributesTo(pole, false, 0, Utility.RandomMinMax(2, 5), 50, 100);
             c.DropItem(pole);
 
-            #region TOL
-            if(Core.TOL)
-                SkillMasteryPrimer.CheckPrimerDrop(this);
-            #endregion
+            SkillMasteryPrimer.CheckPrimerDrop(this);
         }
 
         public override void Delete()
@@ -608,7 +599,7 @@ namespace Server.Mobiles
             base.Delete();
         }
 
-        private Type[] m_Pies = new Type[]
+        private readonly Type[] m_Pies = new Type[]
         {
             typeof(AutumnDragonfishPie),
             typeof(BlueLobsterPie),
@@ -628,7 +619,7 @@ namespace Server.Mobiles
             typeof(YellowtailBarracudaPie),
         };
 
-        private Type[] m_Steaks = new Type[]
+        private readonly Type[] m_Steaks = new Type[]
         {
             typeof(AutumnDragonfishSteak),
             typeof(BlueLobsterMeat),
@@ -661,7 +652,7 @@ namespace Server.Mobiles
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
 
             writer.Write(m_Tentacles.Count);
             foreach (Mobile tent in m_Tentacles)
@@ -732,7 +723,6 @@ namespace Server.Mobiles
             Karma = -2500;
         }
 
-
         public override void GenerateLoot()
         {
             AddLoot(LootPack.FilthyRich, 1);
@@ -754,7 +744,7 @@ namespace Server.Mobiles
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0);
+            writer.Write(0);
 
             writer.Write(m_Master);
         }

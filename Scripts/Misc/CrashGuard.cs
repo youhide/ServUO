@@ -1,10 +1,10 @@
+using Server.Accounting;
+using Server.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
-using Server.Accounting;
-using Server.Network;
 
 namespace Server.Misc
 {
@@ -17,7 +17,7 @@ namespace Server.Misc
         public static void Initialize()
         {
             if (Enabled) // If enabled, register our crash event handler
-                EventSink.Crashed += new CrashedEventHandler(CrashGuard_OnCrash);
+                EventSink.Crashed += CrashGuard_OnCrash;
         }
 
         public static void CrashGuard_OnCrash(CrashedEventArgs e)
@@ -30,9 +30,7 @@ namespace Server.Misc
             if (SaveBackup)
                 Backup();
 
-            /*if ( Core.Service )
-            e.Close = true;
-            else */ if (RestartServer)
+            if (RestartServer)
                 Restart(e);
         }
 
@@ -60,8 +58,9 @@ namespace Server.Misc
             {
                 return Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]);
             }
-            catch
+            catch (Exception e)
             {
+                Server.Diagnostics.ExceptionLogging.LogException(e);
                 return "";
             }
         }
@@ -114,8 +113,9 @@ namespace Server.Misc
                 if (File.Exists(originPath))
                     File.Copy(originPath, backupPath);
             }
-            catch
+            catch (Exception e)
             {
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 
@@ -192,16 +192,18 @@ namespace Server.Misc
                     {
                         op.WriteLine("Mobiles: {0}", World.Mobiles.Count);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Server.Diagnostics.ExceptionLogging.LogException(ex);
                     }
 
                     try
                     {
                         op.WriteLine("Items: {0}", World.Items.Count);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Server.Diagnostics.ExceptionLogging.LogException(ex);
                     }
 
                     op.WriteLine("Exception:");

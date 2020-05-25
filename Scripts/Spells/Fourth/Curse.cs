@@ -1,7 +1,7 @@
+using Server.Spells.First;
+using Server.Targeting;
 using System;
 using System.Collections.Generic;
-using Server.Targeting;
-using Server.Spells.First;
 
 namespace Server.Spells.Fourth
 {
@@ -22,13 +22,7 @@ namespace Server.Spells.Fourth
         {
         }
 
-        public override SpellCircle Circle
-        {
-            get
-            {
-                return SpellCircle.Fourth;
-            }
-        }
+        public override SpellCircle Circle => SpellCircle.Fourth;
 
         public static void AddEffect(Mobile m, TimeSpan duration, int strOffset, int dexOffset, int intOffset)
         {
@@ -63,27 +57,27 @@ namespace Server.Spells.Fourth
 
         public static void RemoveEffect(Mobile m)
         {
-            if(!WeakenSpell.IsUnderEffects(m))
+            if (!WeakenSpell.IsUnderEffects(m))
                 m.RemoveStatMod("[Magic] Str Curse");
 
-            if(!ClumsySpell.IsUnderEffects(m))
+            if (!ClumsySpell.IsUnderEffects(m))
                 m.RemoveStatMod("[Magic] Dex Curse");
 
-            if(!FeeblemindSpell.IsUnderEffects(m))
+            if (!FeeblemindSpell.IsUnderEffects(m))
                 m.RemoveStatMod("[Magic] Int Curse");
 
             BuffInfo.RemoveBuff(m, BuffIcon.Curse);
 
-            if(m_UnderEffect.ContainsKey(m))
+            if (m_UnderEffect.ContainsKey(m))
             {
                 Timer t = m_UnderEffect[m];
-                
-                if(t != null)
+
+                if (t != null)
                     t.Stop();
-                
+
                 m_UnderEffect.Remove(m);
             }
-            
+
             m.UpdateResistances();
         }
 
@@ -113,7 +107,7 @@ namespace Server.Spells.Fourth
             int newDex = SpellHelper.GetOffset(caster, m, StatType.Dex, true, true);
             int newInt = SpellHelper.GetOffset(caster, m, StatType.Int, true, true);
 
-            if ((-newStr > oldStr && -newDex > oldDex && -newInt > oldInt) || 
+            if ((-newStr > oldStr && -newDex > oldDex && -newInt > oldInt) ||
                 (newStr == 0 && newDex == 0 && newInt == 0))
             {
                 return false;
@@ -151,7 +145,7 @@ namespace Server.Spells.Fourth
             return true;
         }
 
-		public void Target(Mobile m)
+        public void Target(Mobile m)
         {
             if (!Caster.CanSee(m))
             {
@@ -171,16 +165,16 @@ namespace Server.Spells.Fourth
                 {
                     DoHurtFizzle();
                 }
-			}
+            }
 
-			FinishSequence();
+            FinishSequence();
         }
 
         private class InternalTarget : Target
         {
             private readonly CurseSpell m_Owner;
             public InternalTarget(CurseSpell owner)
-                : base(Core.ML ? 10 : 12, false, TargetFlags.Harmful)
+                : base(10, false, TargetFlags.Harmful)
             {
                 m_Owner = owner;
             }

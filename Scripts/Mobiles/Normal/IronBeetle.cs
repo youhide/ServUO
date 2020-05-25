@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
-using Server.Items;
 using Server.ContextMenus;
 using Server.Engines.Harvest;
-using Server.Regions;
+using Server.Items;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Mobiles
 {
@@ -49,8 +48,6 @@ namespace Server.Mobiles
             MinTameSkill = 71.1;
             ControlSlots = 4;
 
-            VirtualArmor = 38;
-
             m_MiningTimer = Timer.DelayCall(MiningInterval, MiningInterval, DoMining);
         }
 
@@ -74,24 +71,21 @@ namespace Server.Mobiles
                 c.DropItem(new UndamagedIronBeetleScale());
         }
 
-        public override bool SubdueBeforeTame { get { return true; } }
-        public override bool StatLossAfterTame { get { return true; } }
+        public override bool SubdueBeforeTame => true;
+        public override bool StatLossAfterTame => true;
 
         public override bool OverrideBondingReqs() { return true; }
 
-        public override double GetControlChance(Mobile m, bool useBaseSkill) 
+        public override double GetControlChance(Mobile m, bool useBaseSkill)
         {
-            if (PetTrainingHelper.Enabled)
-            {
-                var profile = PetTrainingHelper.GetAbilityProfile(this);
+            AbilityProfile profile = PetTrainingHelper.GetAbilityProfile(this);
 
-                if (profile != null && profile.HasCustomized())
-                {
-                    return base.GetControlChance(m, useBaseSkill);
-                }
+            if (profile != null && profile.HasCustomized())
+            {
+                return base.GetControlChance(m, useBaseSkill);
             }
 
-            return 1.0; 
+            return 1.0;
         }
 
         public override int GetAngerSound() { return 0x21D; }
@@ -270,14 +264,12 @@ namespace Server.Mobiles
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-
-            writer.Write((int)0);
+            writer.Write(0);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-
             int version = reader.ReadInt();
 
             m_MiningTimer = Timer.DelayCall(MiningInterval, MiningInterval, DoMining);

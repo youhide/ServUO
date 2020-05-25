@@ -1,8 +1,8 @@
+using Server.Gumps;
+using Server.Network;
 using System;
 using System.Collections;
 using System.IO;
-using Server.Gumps;
-using Server.Network;
 
 namespace Server.Engines.Help
 {
@@ -211,7 +211,7 @@ namespace Server.Engines.Help
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 
@@ -243,15 +243,16 @@ namespace Server.Engines.Help
                                 if (split.Length == 2)
                                     list.Add(new PredefinedResponse(split[0], split[1]));
                             }
-                            catch
+                            catch (Exception e)
                             {
+                                Server.Diagnostics.ExceptionLogging.LogException(e);
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Server.Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -415,7 +416,7 @@ namespace Server.Engines.Help
                     {
                         PredefinedResponse resp = (PredefinedResponse)list[index];
 
-                        switch ( type )
+                        switch (type)
                         {
                             case 0: // edit
                                 {
@@ -456,7 +457,7 @@ namespace Server.Engines.Help
             {
                 ArrayList list = PredefinedResponse.List;
 
-                switch ( info.ButtonID )
+                switch (info.ButtonID)
                 {
                     case 1:
                         {
@@ -510,8 +511,8 @@ namespace Server.Engines.Help
                 2415, //Developer
                 2415, //CoOwner
                 2415  //Owner
-        }; 
-        
+        };
+
         private readonly PageEntry m_Entry;
         private readonly Mobile m_Mobile;
 
@@ -632,7 +633,7 @@ namespace Server.Engines.Help
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Server.Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 
@@ -652,7 +653,7 @@ namespace Server.Engines.Help
                 return;
             }
 
-            switch ( info.ButtonID )
+            switch (info.ButtonID)
             {
                 case 0: // close
                     {

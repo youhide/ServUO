@@ -1,8 +1,9 @@
-using System;
 using Server.Gumps;
 using Server.Multis;
 using Server.Network;
 using Server.Targeting;
+using System;
+using System.Linq;
 
 namespace Server.Items
 {
@@ -17,7 +18,7 @@ namespace Server.Items
 
     public class InteriorDecorator : Item
     {
-        public override int LabelNumber { get { return 1041280; } } // an interior decorator
+        public override int LabelNumber => 1041280;  // an interior decorator
 
         [Constructable]
         public InteriorDecorator()
@@ -55,7 +56,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -173,6 +174,17 @@ namespace Server.Items
                 OnTarget(from, targeted);
             }
 
+            private static readonly Type[] m_KingsCollectionTypes = new Type[]
+            {
+                typeof(BirdLamp),    typeof(DragonLantern),
+                typeof(KoiLamp),   typeof(TallLamp)
+            };
+
+            private static bool IsKingsCollection(Item item)
+            {
+                return m_KingsCollectionTypes.Any(t => t == item.GetType());
+            }
+
             protected override void OnTarget(Mobile from, object targeted)
             {
                 if (m_Decorator.Command == DecorateCommand.GetHue)
@@ -198,7 +210,11 @@ namespace Server.Items
 
                     bool isDecorableComponent = false;
 
-                    if (item is AddonComponent || item is AddonContainerComponent || item is BaseAddonContainer)
+                    if (m_Decorator.Command == DecorateCommand.Turn && IsKingsCollection(item))
+                    {
+                        isDecorableComponent = true;
+                    }
+                    else if (item is AddonComponent || item is AddonContainerComponent || item is BaseAddonContainer)
                     {
                         object addon = null;
                         int count = 0;
@@ -222,7 +238,7 @@ namespace Server.Items
                             addon = container;
                         }
 
-                        if (count == 1 && Core.SE)
+                        if (count == 1)
                             isDecorableComponent = true;
 
                         if (item is EnormousVenusFlytrapAddon)
@@ -230,10 +246,13 @@ namespace Server.Items
 
                         if (m_Decorator.Command == DecorateCommand.Turn)
                         {
-                            FlipableAddonAttribute[] attributes = (FlipableAddonAttribute[])addon.GetType().GetCustomAttributes(typeof(FlipableAddonAttribute), false);
+                            if (addon != null)
+                            {
+                                FlipableAddonAttribute[] attributes = (FlipableAddonAttribute[])addon.GetType().GetCustomAttributes(typeof(FlipableAddonAttribute), false);
 
-                            if (attributes.Length > 0)
-                                isDecorableComponent = true;
+                                if (attributes.Length > 0)
+                                    isDecorableComponent = true;
+                            }
                         }
                     }
                     else if (item is Banner && m_Decorator.Command != DecorateCommand.Turn)
@@ -291,7 +310,7 @@ namespace Server.Items
             protected override void OnTargetCancel(Mobile from, TargetCancelType cancelType)
             {
                 if (cancelType == TargetCancelType.Canceled)
-                    from.CloseGump(typeof(InteriorDecorator.InternalGump));
+                    from.CloseGump(typeof(InternalGump));
             }
 
             private static void Turn(Item item, Mobile from)
@@ -313,12 +332,15 @@ namespace Server.Items
                     else if (item is BaseAddonContainer)
                         addon = (BaseAddonContainer)item;
 
-                    FlipableAddonAttribute[] aAttributes = (FlipableAddonAttribute[])addon.GetType().GetCustomAttributes(typeof(FlipableAddonAttribute), false);
-
-                    if (aAttributes.Length > 0)
+                    if (addon != null)
                     {
-                        aAttributes[0].Flip(from, (Item)addon);
-                        return;
+                        FlipableAddonAttribute[] aAttributes = (FlipableAddonAttribute[])addon.GetType().GetCustomAttributes(typeof(FlipableAddonAttribute), false);
+
+                        if (aAttributes.Length > 0)
+                        {
+                            aAttributes[0].Flip(@from, (Item)addon);
+                            return;
+                        }
                     }
                 }
 

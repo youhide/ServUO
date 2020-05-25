@@ -1,17 +1,16 @@
-using System;
-using Server;
+using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
-using Server.Gumps;
 using Server.Network;
 using Server.Targeting;
+using System;
 using System.Collections.Generic;
 
 namespace Server.Engines.NewMagincia
 {
     public class CommodityBrokerGump : BaseBazaarGump
     {
-        private CommodityBroker m_Broker;
+        private readonly CommodityBroker m_Broker;
 
         public CommodityBrokerGump(CommodityBroker broker, Mobile from)
             : base(520, 520)
@@ -105,7 +104,7 @@ namespace Server.Engines.NewMagincia
                     {
                         amount = Convert.ToInt32(text1);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
 
                     if (amount > 0)
                     {
@@ -121,7 +120,7 @@ namespace Server.Engines.NewMagincia
                     {
                         amount1 = Convert.ToInt32(text2);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
 
                     if (amount1 > 0)
                     {
@@ -161,7 +160,7 @@ namespace Server.Engines.NewMagincia
 
         public class InternalTarget : Target
         {
-            private CommodityBroker m_Broker;
+            private readonly CommodityBroker m_Broker;
             private bool m_HasPickedCommodity;
 
             public InternalTarget(CommodityBroker broker) : this(broker, false)
@@ -229,7 +228,7 @@ namespace Server.Engines.NewMagincia
 
     public class CommodityTargetGump : BaseBazaarGump
     {
-        private CommodityBroker m_Broker;
+        private readonly CommodityBroker m_Broker;
 
         public CommodityTargetGump(CommodityBroker broker)
             : base(520, 520)
@@ -272,9 +271,9 @@ namespace Server.Engines.NewMagincia
 
     public class SetPricesAndLimitsGump : BaseBazaarGump
     {
-        private CommodityBroker m_Broker;
+        private readonly CommodityBroker m_Broker;
         private int m_Index;
-        private int m_Page;
+        private readonly int m_Page;
 
         public SetPricesAndLimitsGump(CommodityBroker broker) : this(broker, -1, 0) { }
 
@@ -393,22 +392,22 @@ namespace Server.Engines.NewMagincia
                     {
                         buyAt = Convert.ToInt32(relay1.Text);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
                     try
                     {
                         buyLmt = Convert.ToInt32(relay2.Text);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
                     try
                     {
                         sellAt = Convert.ToInt32(relay3.Text);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
                     try
                     {
                         sellLmt = Convert.ToInt32(relay4.Text);
                     }
-                    catch { }
+                    catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
 
                     if (buyLmt < 0 || buyLmt > 60000 || sellLmt < 0 || sellLmt > 60000)
                         from.SendLocalizedMessage(1150776); // You have entered an invalid numeric value. Negative values are not allowed. Trade quantities are limited to 60,000 per transaction.
@@ -442,9 +441,9 @@ namespace Server.Engines.NewMagincia
 
     public class ViewInventoryGump : BaseBazaarGump
     {
-        private CommodityBroker m_Broker;
-        private int m_Index;
-        private int m_Page;
+        private readonly CommodityBroker m_Broker;
+        private readonly int m_Index;
+        private readonly int m_Page;
 
         public ViewInventoryGump(CommodityBroker broker) : this(broker, -1)
         {
@@ -455,7 +454,7 @@ namespace Server.Engines.NewMagincia
         }
 
         public ViewInventoryGump(CommodityBroker broker, int index, int page)
-            : base (660, 520)
+            : base(660, 520)
         {
             m_Broker = broker;
             m_Index = index;
@@ -507,7 +506,7 @@ namespace Server.Engines.NewMagincia
                 AddButton(390, 350, 4005, 4007, 401, GumpButtonType.Reply, 0);
 
             AddHtmlLocalized(160, 415, 150, 18, 1150202, OrangeColor16, false, false); // WITHDRAW
-            AddBackground(250, 415, 360, 22, 9350); 
+            AddBackground(250, 415, 360, 22, 9350);
             AddTextEntry(251, 415, 358, 20, LabelHueBlue, 0, "");
             AddButton(620, 415, 4014, 4016, 1, GumpButtonType.Reply, 0);
 
@@ -540,7 +539,7 @@ namespace Server.Engines.NewMagincia
                         {
                             amount = Convert.ToInt32(relay.Text);
                         }
-                        catch { }
+                        catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
 
                         if (amount <= 0 || amount > entry.Stock)
                             from.SendLocalizedMessage(1150215); // You have entered an invalid value, or a non-numeric value. Please try again.
@@ -624,10 +623,10 @@ namespace Server.Engines.NewMagincia
 
     public class CommodityInventoryGump : BaseBazaarGump
     {
-        private CommodityBroker m_Broker;
-        private List<CommodityBrokerEntry> m_Entries;
+        private readonly CommodityBroker m_Broker;
+        private readonly List<CommodityBrokerEntry> m_Entries;
         private bool m_Buy;
-        private int m_Page;
+        private readonly int m_Page;
         private int m_Index;
 
         public CommodityInventoryGump(CommodityBroker broker) : this(broker, -1, true, 0, 0)
@@ -807,7 +806,7 @@ namespace Server.Engines.NewMagincia
                     return;
                 case 500: // TRADE
                     {
-                        for (var i = 0; i < m_Entries.Count; i++)
+                        for (int i = 0; i < m_Entries.Count; i++)
                         {
                             int buyid = 2 + i;
                             int sellid = 102 + i;
@@ -847,7 +846,7 @@ namespace Server.Engines.NewMagincia
                             {
                                 amount = Convert.ToInt32(relay.Text);
                             }
-                            catch { }
+                            catch (Exception e) { Server.Diagnostics.ExceptionLogging.LogException(e); }
 
                             if (amount > 0)
                             {
@@ -901,12 +900,12 @@ namespace Server.Engines.NewMagincia
 
     public class ConfirmRemoveEntryGump : BaseConfirmGump
     {
-        private CommodityBroker m_Broker;
-        private CommodityBrokerEntry m_Entry;
-        private int m_Index;
+        private readonly CommodityBroker m_Broker;
+        private readonly CommodityBrokerEntry m_Entry;
+        private readonly int m_Index;
 
-        public override string TitleString { get { return "Remove Commodity Confirmation"; } }
-        public override string LabelString { get { return "Are you sure you want to remove this entry from your commodity broker? Any unused stock will be placed in your bankbox."; } }
+        public override string TitleString => "Remove Commodity Confirmation";
+        public override string LabelString => "Are you sure you want to remove this entry from your commodity broker? Any unused stock will be placed in your bankbox.";
 
         public ConfirmRemoveEntryGump(CommodityBroker broker, int index)
         {
@@ -933,10 +932,10 @@ namespace Server.Engines.NewMagincia
 
     public class ConfirmBuyCommodityGump : BaseBazaarGump
     {
-        private Gump _Gump;
-        private CommodityBroker m_Broker;
-        private int m_Amount;
-        private CommodityBrokerEntry m_Entry;
+        private readonly Gump _Gump;
+        private readonly CommodityBroker m_Broker;
+        private readonly int m_Amount;
+        private readonly CommodityBrokerEntry m_Entry;
 
         public ConfirmBuyCommodityGump(CommodityBroker broker, int amount, CommodityBrokerEntry entry, bool buy, Gump g)
             : base(660, 520)

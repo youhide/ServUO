@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
+using Server.Accounting;
 using Server.ContextMenus;
 using Server.Mobiles;
 using Server.Multis;
 using Server.Network;
-using Server.Accounting;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Server.Items
@@ -32,23 +32,23 @@ namespace Server.Items
             }
         }
 
-		private string m_EngravedText = string.Empty;
+        private string m_EngravedText = string.Empty;
 
-		[CommandProperty(AccessLevel.GameMaster)]
-		public string EngravedText
-		{
-			get { return m_EngravedText; }
-			set
-			{
-				if (value != null)
-					m_EngravedText = value;
-				else
-					m_EngravedText = string.Empty;
-				InvalidateProperties();
-			}
-		}
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string EngravedText
+        {
+            get { return m_EngravedText; }
+            set
+            {
+                if (value != null)
+                    m_EngravedText = value;
+                else
+                    m_EngravedText = string.Empty;
+                InvalidateProperties();
+            }
+        }
 
-		public override bool IsAccessibleTo(Mobile m)
+        public override bool IsAccessibleTo(Mobile m)
         {
             if (!BaseHouse.CheckAccessible(m, this))
                 return false;
@@ -72,7 +72,7 @@ namespace Server.Items
             return base.CheckItemUse(from, item);
         }
 
-        public virtual bool Security { get { return true; } }
+        public virtual bool Security => true;
 
         public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
         {
@@ -239,24 +239,24 @@ namespace Server.Items
             }
         }
 
-		public override void AddNameProperty(ObjectPropertyList list)
-		{
-			base.AddNameProperty(list);
+        public override void AddNameProperty(ObjectPropertyList list)
+        {
+            base.AddNameProperty(list);
 
-			if(!String.IsNullOrEmpty(EngravedText))
-			{
+            if (!String.IsNullOrEmpty(EngravedText))
+            {
                 list.Add(1072305, Utility.FixHtml(EngravedText)); // Engraved: ~1_INSCRIPTION~
-			}
-		}
+            }
+        }
 
         public override bool DropToWorld(Mobile m, Point3D p)
         {
-            Server.Engines.Despise.WispOrb.CheckDrop(this, m);
+            Engines.Despise.WispOrb.CheckDrop(this, m);
 
             return base.DropToWorld(m, p);
         }
 
-		public virtual void Open(Mobile from)
+        public virtual void Open(Mobile from)
         {
             DisplayTo(from);
         }
@@ -287,26 +287,54 @@ namespace Server.Items
             }
         }
 
+        public virtual void AddLoot(LootPack pack)
+        {
+            AddLoot(pack, 100.0);
+        }
+
+        public virtual void AddLoot(LootPack pack, int amount)
+        {
+            AddLoot(pack, amount, 100.0);
+        }
+
+        public virtual void AddLoot(LootPack pack, int amount, double chance)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                AddLoot(pack, chance);
+            }
+        }
+
+        public virtual void AddLoot(LootPack pack, double chance)
+        {
+            if (chance < 100.0 && Utility.RandomDouble() > chance / 100)
+            {
+                return;
+            }
+
+            pack.Generate(this);
+        }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
 
-			writer.Write(1000); // Version
-			writer.Write(m_EngravedText);
+            writer.Write(1000); // Version
+            writer.Write(m_EngravedText);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
 
-			int version = reader.PeekInt();
-			switch(version)
-			{
-				case 1000:
-					reader.ReadInt();
-					m_EngravedText = reader.ReadString();
-					break;
-			}
+            int version = reader.PeekInt();
+            switch (version)
+            {
+                case 1000:
+                    reader.ReadInt();
+                    m_EngravedText = reader.ReadString();
+                    break;
+            }
         }
     }
 
@@ -365,7 +393,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -393,13 +421,7 @@ namespace Server.Items
         {
         }
 
-        public override int DefaultMaxWeight
-        {
-            get
-            {
-                return 1600;
-            }
-        }
+        public override int DefaultMaxWeight => 1600;
         public override bool CheckHold(Mobile m, Item item, bool message, bool checkItems, int plusItems, int plusWeight)
         {
             return base.CheckHold(m, item, false, checkItems, plusItems, plusWeight);
@@ -419,7 +441,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -452,17 +474,10 @@ namespace Server.Items
         {
             get
             {
-                if (Core.ML)
+                Mobile m = ParentEntity as Mobile;
+                if (m != null && m.Player && m.Backpack == this)
                 {
-                    Mobile m = ParentEntity as Mobile;
-                    if (m != null && m.Player && m.Backpack == this)
-                    {
-                        return 550;
-                    }
-                    else
-                    {
-                        return base.DefaultMaxWeight;
-                    }
+                    return 550;
                 }
                 else
                 {
@@ -484,7 +499,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -516,7 +531,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -554,7 +569,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -582,7 +597,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -610,7 +625,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -649,7 +664,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -676,11 +691,11 @@ namespace Server.Items
                 if (Items.Count > 0)
                 {
                     from.SendLocalizedMessage(500848); // Couldn't pour it there.  It was already full.
-                    beverage.PrivateOverheadMessage(Server.Network.MessageType.Regular, 0, 500841, from.NetState); // that has somethign in it.
+                    beverage.PrivateOverheadMessage(MessageType.Regular, 0, 500841, from.NetState); // that has somethign in it.
                 }
                 else
                 {
-                    var barrel = new WaterBarrel();
+                    WaterBarrel barrel = new WaterBarrel();
                     barrel.Movable = false;
                     barrel.MoveToWorld(Location, Map);
 
@@ -699,7 +714,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -728,7 +743,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -757,7 +772,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -786,7 +801,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -817,7 +832,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -851,11 +866,11 @@ namespace Server.Items
                 return base.CheckLocked(from);
             }
 
-            if (Locked && TrapType == TrapType.DartTrap && from.InRange(GetWorldLocation(), 2))
+            if (!Locked && TrapType == TrapType.DartTrap && from.InRange(GetWorldLocation(), 2))
             {
                 int damage;
-                var p = GetWorldLocation();
-                var map = Map;
+                Point3D p = GetWorldLocation();
+                Map map = Map;
 
                 if (TrapLevel > 0)
                     damage = Utility.RandomMinMax(5, 15) * TrapLevel;
@@ -864,7 +879,7 @@ namespace Server.Items
 
                 AOS.Damage(from, damage, 100, 0, 0, 0, 0);
 
-                from.LocalOverheadMessage(Network.MessageType.Regular, 0x62, 502998); // A dart imbeds itself in your flesh!
+                from.LocalOverheadMessage(MessageType.Regular, 0x62, 502998); // A dart imbeds itself in your flesh!
                 Effects.PlaySound(p, map, 0x223);
 
                 return true;
@@ -882,7 +897,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -913,7 +928,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -944,7 +959,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -969,15 +984,15 @@ namespace Server.Items
             : base(serial)
         {
         }
-		
-		public override double DefaultWeight { get { return 5; } } 
-		public override int LabelNumber { get { return 1022472; } } // metal box
+
+        public override double DefaultWeight => 5;
+        public override int LabelNumber => 1022472;  // metal box
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1007,7 +1022,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1037,7 +1052,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1068,7 +1083,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1098,7 +1113,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1128,7 +1143,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1158,7 +1173,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1189,7 +1204,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)2); // version
+            writer.Write(2); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1200,7 +1215,7 @@ namespace Server.Items
 
             if (version == 0 && Weight == 15)
                 Weight = -1;
-			
+
             if (version < 2)
                 GumpID = 0x10B;
         }
@@ -1225,7 +1240,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)1); // version
+            writer.Write(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1255,7 +1270,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0); // version 
+            writer.Write(0); // version 
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1269,8 +1284,8 @@ namespace Server.Items
     [FlipableAttribute(0xA99, 0xA97)]
     public class AcademicBookCase : BaseContainer
     {
-        public override int LabelNumber { get { return 1071213; } } // academic bookcase
-        public override int DefaultGumpID { get { return 0x4D; } }
+        public override int LabelNumber => 1071213;  // academic bookcase
+        public override int DefaultGumpID => 0x4D;
 
         [Constructable]
         public AcademicBookCase()
@@ -1287,7 +1302,7 @@ namespace Server.Items
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -1300,9 +1315,9 @@ namespace Server.Items
     [FlipableAttribute(0xA0DB, 0xA0DC)]
     public class EnchantedPicnicBasket : BaseContainer
     {
-        public override int LabelNumber { get { return 1158333; } } // enchanted picnic basket
+        public override int LabelNumber => 1158333;  // enchanted picnic basket
 
-        public override int DefaultGumpID { get { return 0x108; } }
+        public override int DefaultGumpID => 0x108;
 
         [Constructable]
         public EnchantedPicnicBasket()
@@ -1323,7 +1338,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)0); // version
+            writer.Write(0); // version
         }
 
         public override void Deserialize(GenericReader reader)

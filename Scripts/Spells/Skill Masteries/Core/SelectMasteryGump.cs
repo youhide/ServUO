@@ -1,24 +1,18 @@
-using Server;
-using System;
-using System.Collections.Generic;
 using Server.Items;
 using Server.Mobiles;
 using Server.Spells.SkillMasteries;
-using System.Linq;
-using Server.Network;
+using System;
 
 namespace Server.Gumps
 {
     public class MasterySelectionGump : BaseGump
     {
-        //public const int Red = 0x4800;
-        //public const int Blue = 0x000F;
         public const int Red = 0x8e2525;
         public const int Blue = 0x000066;
 
         public BookOfMasteries Book { get; private set; }
 
-        public MasterySelectionGump(PlayerMobile user, BookOfMasteries book) 
+        public MasterySelectionGump(PlayerMobile user, BookOfMasteries book)
             : base(user, 75, 25)
         {
             Book = book;

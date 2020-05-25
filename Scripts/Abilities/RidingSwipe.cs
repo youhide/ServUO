@@ -1,6 +1,5 @@
-using System;
 using Server.Mobiles;
-using System.Collections.Generic;
+using System;
 
 namespace Server.Items
 {
@@ -11,27 +10,11 @@ namespace Server.Items
     /// </summary>
     public class RidingSwipe : WeaponAbility
     {
-        public RidingSwipe()
-        {
-        }
+        public override int BaseMana => 25;
 
-        public override int BaseMana
-        {
-            get
-            {
-                return 25;
-            }
-        }
-        public override bool RequiresSE
-        {
-            get
-            {
-                return true;
-            }
-        }
         public override bool CheckSkills(Mobile from)
         {
-            if (this.GetSkill(from, SkillName.Bushido) < 50.0)
+            if (GetSkill(from, SkillName.Bushido) < 50.0)
             {
                 from.SendLocalizedMessage(1070768, "50"); // You need ~1_SKILL_REQUIREMENT~ Bushido skill to perform that attack!
                 return false;
@@ -42,14 +25,14 @@ namespace Server.Items
 
         public override void OnHit(Mobile attacker, Mobile defender, int damage)
         {
-            if (!defender.Mounted && !defender.Flying && (!Core.ML || !Server.Spells.Ninjitsu.AnimalForm.UnderTransformation(defender)))
+            if (!defender.Mounted && !defender.Flying && !Spells.Ninjitsu.AnimalForm.UnderTransformation(defender))
             {
                 attacker.SendLocalizedMessage(1060848); // This attack only works on mounted targets
                 ClearCurrentAbility(attacker);
                 return;
             }
 
-            if (!this.Validate(attacker) || !this.CheckMana(attacker, true))
+            if (!Validate(attacker) || !CheckMana(attacker, true))
                 return;
 
             ClearCurrentAbility(attacker);
@@ -61,21 +44,18 @@ namespace Server.Items
                 BlockMountType type = BlockMountType.RidingSwipe;
                 IMount mount = defender.Mount;
 
-                if (Core.SA)
+                if (defender.Flying)
                 {
-                    if (defender.Flying)
-                    {
-                        type = BlockMountType.RidingSwipeFlying;
-                    }
-                    else if (mount is EtherealMount)
-                    {
-                        type = BlockMountType.RidingSwipeEthereal;
-                    }
+                    type = BlockMountType.RidingSwipeFlying;
+                }
+                else if (mount is EtherealMount)
+                {
+                    type = BlockMountType.RidingSwipeEthereal;
                 }
 
                 Server.Items.Dismount.DoDismount(attacker, defender, mount, 10, type);
 
-                if(mount is Mobile)
+                if (mount is Mobile)
                     AOS.Damage((Mobile)mount, attacker, amount, 100, 0, 0, 0, 0);
 
                 defender.PlaySound(0x140);

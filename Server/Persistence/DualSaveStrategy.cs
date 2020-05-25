@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 
 namespace Server
@@ -9,32 +8,25 @@ namespace Server
         {
         }
 
-        public override string Name
+        public override string Name => "Dual";
+        public override void Save(SaveMetrics metrics, bool permitBackgroundWrite)
         {
-            get
-            {
-                return "Dual";
-            }
-        }
-        public override void Save(SaveMetrics metrics, bool permitBackgroundWrite) 
-        {
-            this.PermitBackgroundWrite = permitBackgroundWrite;
+            PermitBackgroundWrite = permitBackgroundWrite;
 
-            Thread saveThread = new Thread(delegate()
+            Thread saveThread = new Thread(delegate ()
             {
-                this.SaveItems(metrics);
+                SaveItems(metrics);
             });
 
             saveThread.Name = "Item Save Subset";
             saveThread.Start();
 
-            this.SaveMobiles(metrics);
-            this.SaveGuilds(metrics);
-            this.SaveData(metrics);
+            SaveMobiles(metrics);
+            SaveGuilds(metrics);
 
             saveThread.Join();
 
-            if (permitBackgroundWrite && this.UseSequentialWriters)	//If we're permitted to write in the background, but we don't anyways, then notify.
+            if (permitBackgroundWrite && UseSequentialWriters)	//If we're permitted to write in the background, but we don't anyways, then notify.
                 World.NotifyDiskWriteComplete();
         }
     }

@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
 using Server.Items;
 using Server.Mobiles;
 using Server.Spells;
 using Server.Spells.Necromancy;
 using Server.Spells.Ninjitsu;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Spells.Ninjitsu
 {
@@ -20,34 +20,10 @@ namespace Server.Spells.Ninjitsu
         {
         }
 
-        public override TimeSpan CastDelayBase
-        {
-            get
-            {
-                return TimeSpan.FromSeconds(1.5);
-            }
-        }
-        public override double RequiredSkill
-        {
-            get
-            {
-                return Core.ML ? 20.0 : 40.0;
-            }
-        }
-        public override int RequiredMana
-        {
-            get
-            {
-                return 10;
-            }
-        }
-        public override bool BlockedByAnimalForm
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(1.5);
+        public override double RequiredSkill => 20.0;
+        public override int RequiredMana => 10;
+        public override bool BlockedByAnimalForm => false;
 
         public static bool HasClone(Mobile m)
         {
@@ -146,7 +122,7 @@ namespace Server.Spells.Ninjitsu
         {
             Clone clone = null;
 
-            if (HasClone(defender) && (defender.Skills.Ninjitsu.Value / 150.0) > Utility.RandomDouble())
+            if (HasClone(defender) && (defender.Skills.Ninjitsu.Value / 133.2) > Utility.RandomDouble())
             {
                 IPooledEnumerable eable = defender.GetMobilesInRange(4);
 
@@ -174,7 +150,7 @@ namespace Server.Mobiles
 {
     public class Clone : BaseCreature
     {
-        private Mobile m_Caster;  
+        private Mobile m_Caster;
         public Clone(Mobile caster)
             : base(AIType.AI_Melee, FightMode.None, 10, 1, 0.2, 0.4)
         {
@@ -231,36 +207,12 @@ namespace Server.Mobiles
         {
         }
 
-        public override bool DeleteCorpseOnDeath
-        {
-            get
-            {
-                return true;
-            }
-        }
-        public override bool IsDispellable
-        {
-            get
-            {
-                return false;
-            }
-        }
-        public override bool Commandable
-        {
-            get
-            {
-                return false;
-            }
-        }
-        protected override BaseAI ForcedAI
-        {
-            get
-            {
-                return new CloneAI(this);
-            }
-        }
+        public override bool DeleteCorpseOnDeath => true;
+        public override bool IsDispellable => false;
+        public override bool Commandable => false;
+        protected override BaseAI ForcedAI => new CloneAI(this);
 
-        public override bool CanDetectHidden { get { return false; } }
+        public override bool CanDetectHidden => false;
 
         public override bool IsHumanInTown()
         {

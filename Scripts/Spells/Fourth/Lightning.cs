@@ -1,6 +1,5 @@
-using System;
-using Server.Targeting;
 using Server.Mobiles;
+using Server.Targeting;
 
 namespace Server.Spells.Fourth
 {
@@ -17,20 +16,8 @@ namespace Server.Spells.Fourth
         {
         }
 
-        public override SpellCircle Circle
-        {
-            get
-            {
-                return SpellCircle.Fourth;
-            }
-        }
-        public override bool DelayedDamage
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override SpellCircle Circle => SpellCircle.Fourth;
+        public override bool DelayedDamage => false;
         public override void OnCast()
         {
             Caster.Target = new InternalTarget(this);
@@ -51,25 +38,7 @@ namespace Server.Spells.Fourth
 
                 SpellHelper.CheckReflect((int)Circle, ref source, ref m);
 
-                double damage = 0;
-
-                if (Core.AOS)
-                {
-                    damage = GetNewAosDamage(23, 1, 4, m);
-                }
-                else if (mob != null)
-                {
-                    damage = Utility.Random(12, 9);
-
-                    if (CheckResisted(mob))
-                    {
-                        damage *= 0.75;
-
-                        mob.SendLocalizedMessage(501783); // You feel yourself resisting magical energy.
-                    }
-
-                    damage *= GetDamageScalar(mob);
-                }
+                double damage = GetNewAosDamage(23, 1, 4, m);
 
                 if (m is Mobile)
                 {
@@ -93,7 +62,7 @@ namespace Server.Spells.Fourth
         {
             private readonly LightningSpell m_Owner;
             public InternalTarget(LightningSpell owner)
-                : base(Core.ML ? 10 : 12, false, TargetFlags.Harmful)
+                : base(10, false, TargetFlags.Harmful)
             {
                 m_Owner = owner;
             }

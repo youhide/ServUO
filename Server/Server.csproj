@@ -10,7 +10,7 @@
     <AssemblyName>ServUO</AssemblyName>
     <ApplicationIcon>servuo.ico</ApplicationIcon>
     <StartupObject>Server.Core</StartupObject>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -62,19 +62,6 @@
     <Compile Include=".\ContextMenus\ContextMenuEntry.cs" />
     <Compile Include=".\ContextMenus\OpenBackpackEntry.cs" />
     <Compile Include=".\ContextMenus\PaperdollEntry.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Base Types\BaseCore.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Base Types\BaseModule.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Base Types\BaseService.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Base Types\Events.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Base Types\SaveData.cs" />
-    <Compile Include=".\Customs Framework\Central Core\CustomSerial.cs" />
-    <Compile Include=".\Customs Framework\Central Core\Interfaces.cs" />
-    <Compile Include=".\Customs Framework\Custom Types\LastEditedBy.cs" />
-    <Compile Include=".\Customs Framework\Custom Types\Place.cs" />
-    <Compile Include=".\Customs Framework\Utilities\Decompressor.cs" />
-    <Compile Include=".\Customs Framework\Utilities\ObjectDumper.cs" />
-    <Compile Include=".\Customs Framework\Utilities\OutgoingPacketOverride.cs" />
-    <Compile Include=".\Customs Framework\Utilities\Utilities.cs" />
     <Compile Include=".\Diagnostics\BaseProfile.cs" />
     <Compile Include=".\Diagnostics\GumpProfile.cs" />
     <Compile Include=".\Diagnostics\PacketProfile.cs" />
@@ -163,6 +150,7 @@
     <Compile Include=".\VirtueInfo.cs" />
     <Compile Include=".\World.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="ExceptionLogging.cs" />
     <Compile Include="Gumps\ECHandleInput.cs" />
     <Compile Include="Gumps\Gump.cs" />
     <Compile Include="Gumps\GumpAlphaRegion.cs" />
@@ -182,6 +170,7 @@
     <Compile Include="Gumps\GumpLabelCropped.cs" />
     <Compile Include="Gumps\GumpPage.cs" />
     <Compile Include="Gumps\GumpRadio.cs" />
+    <Compile Include="Gumps\GumpSpriteImage.cs" />
     <Compile Include="Gumps\GumpTextEntry.cs" />
     <Compile Include="Gumps\GumpTextEntryLimited.cs" />
     <Compile Include="Gumps\GumpTooltip.cs" />

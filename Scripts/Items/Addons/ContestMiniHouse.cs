@@ -1,4 +1,3 @@
-using System;
 using Server.Engines.VeteranRewards;
 
 namespace Server.Items
@@ -50,7 +49,7 @@ namespace Server.Items
             base.Serialize(writer);
             writer.WriteEncodedInt(0); // version
 
-            writer.Write((bool)m_IsRewardItem);
+            writer.Write(m_IsRewardItem);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -116,7 +115,7 @@ namespace Server.Items
         {
             base.GetProperties(list);
 
-            if (Core.ML && m_IsRewardItem)
+            if (m_IsRewardItem)
                 list.Add(1076217); // 1st Year Veteran Reward
         }
 
@@ -125,7 +124,7 @@ namespace Server.Items
             base.Serialize(writer);
             writer.WriteEncodedInt(0); // version
 
-            writer.Write((bool)m_IsRewardItem);
+            writer.Write(m_IsRewardItem);
         }
 
         public override void Deserialize(GenericReader reader)

@@ -1,16 +1,21 @@
 #region References
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 using Server.Mobiles;
 using Server.Network;
 using Server.Spells;
+using Server.Regions;
+using System;
+using System.Collections.Generic;
+using System.Text;
 #endregion
 
 namespace Server.Items
 {
-    public class Teleporter : Item
+    public interface ITeleporter
+    {
+        void DoTeleport(Mobile m);
+    }
+
+    public class Teleporter : Item, ITeleporter
     {
         private bool m_Active, m_Creatures, m_CombatCheck, m_CriminalCheck;
         private Point3D m_PointDest;
@@ -160,7 +165,7 @@ namespace Server.Items
             }
         }
 
-        public override int LabelNumber { get { return 1026095; } } // teleporter
+        public override int LabelNumber => 1026095;  // teleporter
         public override void GetProperties(ObjectPropertyList list)
         {
             base.GetProperties(list);
@@ -187,31 +192,6 @@ namespace Server.Items
             list.Add(1060660, "Creatures\t{0}", m_Creatures ? "Yes" : "No");
         }
 
-        public override void OnSingleClick(Mobile from)
-        {
-            base.OnSingleClick(from);
-
-            if (m_Active)
-            {
-                if (m_MapDest != null && m_PointDest != Point3D.Zero)
-                {
-                    LabelTo(from, "{0} [{1}]", m_PointDest, m_MapDest);
-                }
-                else if (m_MapDest != null)
-                {
-                    LabelTo(from, "[{0}]", m_MapDest);
-                }
-                else if (m_PointDest != Point3D.Zero)
-                {
-                    LabelTo(from, m_PointDest.ToString());
-                }
-            }
-            else
-            {
-                LabelTo(from, "(inactive)");
-            }
-        }
-
         public virtual bool CanTeleport(Mobile m)
         {
             if (!m_Active)
@@ -229,19 +209,19 @@ namespace Server.Items
                 m.SendLocalizedMessage(1071955); // You cannot teleport while dragging an object.
                 return false;
             }
-            
+
             if (m_CriminalCheck && m.Criminal)
             {
                 m.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
                 return false;
             }
-            
+
             if (m_CombatCheck && SpellHelper.CheckCombat(m))
             {
                 m.SendLocalizedMessage(1005564, "", 0x22); // Wouldst thou flee during the heat of battle??
                 return false;
             }
-            
+
             if (!CheckDestination(m) || (Siege.SiegeShard && m_MapDest == Map.Trammel))
             {
                 return false;
@@ -274,7 +254,6 @@ namespace Server.Items
         {
             if (!m.CanBeginAction(typeof(Teleporter)))
             {
-                m.SendMessage("Teleport in progress...");
                 return;
             }
 
@@ -283,15 +262,7 @@ namespace Server.Items
                 return;
             }
 
-            if (m_Delay > TimeSpan.Zero)
-            {
-                DelayedTeleport(m);
-            }
-            else
-            {
-                // Allow OnMoveOver to return before processing the map/location changes
-                Timer.DelayCall(DoTeleport, m); 
-            }
+            DelayedTeleport(m);
         }
 
         private void DelayedTeleport(Mobile m)
@@ -300,20 +271,14 @@ namespace Server.Items
 
             m.Frozen = true;
 
-            m.SendMessage(
-                "Teleporting in {0:#,0.##} second{1}",
-                m_Delay.TotalSeconds,
-                m_Delay.TotalSeconds != 1 ? "s" : String.Empty);
-
-            Timer.DelayCall(m_Delay, DelayedTeleportCallback, m);
+            Timer.DelayCall(m_Delay > TeleportRegion.Delay ? m_Delay : TeleportRegion.Delay, DelayedTeleportCallback, m);
         }
 
         private void DelayedTeleportCallback(Mobile m)
         {
-            m.EndAction(typeof(Teleporter));
+            Timer.DelayCall(TimeSpan.FromMilliseconds(250), () => m.EndAction(typeof(Teleporter)));
 
             m.Frozen = false;
-
             DoTeleport(m);
         }
 
@@ -341,7 +306,6 @@ namespace Server.Items
             }
 
             BaseCreature.TeleportPets(m, p, map);
-
             m.MoveToWorld(p, map);
 
             if (m_DestEffect && sendEffect)
@@ -358,7 +322,7 @@ namespace Server.Items
         public override bool OnMoveOver(Mobile m)
         {
             StartTeleport(m);
-            
+
             return true;
         }
 
@@ -634,7 +598,7 @@ namespace Server.Items
             }
         }
 
-        public override bool HandlesOnSpeech { get { return true; } }
+        public override bool HandlesOnSpeech => true;
 
         public override void OnSpeech(SpeechEventArgs e)
         {
@@ -904,8 +868,8 @@ namespace Server.Items
                 m_Timer = t;
             }
 
-            public WaitTeleporter Teleporter { get { return m_Teleporter; } }
-            public Timer Timer { get { return m_Timer; } }
+            public WaitTeleporter Teleporter => m_Teleporter;
+            public Timer Timer => m_Timer;
         }
     }
 
@@ -985,7 +949,7 @@ namespace Server.Items
             writer.Write(m_TimeoutDelay);
             writer.Write(m_Teleporting.Count);
 
-            foreach (var kvp in m_Teleporting)
+            foreach (KeyValuePair<Mobile, Timer> kvp in m_Teleporting)
             {
                 writer.Write(kvp.Key);
                 writer.Write(kvp.Value.Next);
@@ -1046,7 +1010,7 @@ namespace Server.Items
         [CommandProperty(AccessLevel.GameMaster)]
         public TimeoutTeleporter Teleporter { get { return m_Teleporter; } set { m_Teleporter = value; } }
 
-        public override string DefaultName { get { return "timeout teleporter goal"; } }
+        public override string DefaultName => "timeout teleporter goal";
 
         public override bool OnMoveOver(Mobile m)
         {

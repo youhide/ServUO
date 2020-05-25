@@ -8,14 +8,6 @@
 *   $Id: BinaryMemoryWriter.cs 37 2006-06-19 17:28:24Z mark $
 *
 ***************************************************************************/
-
-
-
-
-
-
-
-
 /***************************************************************************
 *
 *   This program is free software; you can redistribute it and/or modify
@@ -24,7 +16,6 @@
 *   (at your option) any later version.
 *
 ***************************************************************************/
-using System;
 using System.IO;
 
 namespace Server
@@ -39,13 +30,7 @@ namespace Server
             this.stream = this.UnderlyingStream as MemoryStream;
         }
 
-        protected override int BufferSize
-        {
-            get
-            {
-                return 512;
-            }
-        }
+        protected override int BufferSize => 512;
         public int CommitTo(SequentialFileWriter dataFile, SequentialFileWriter indexFile, int typeCode, int serial)
         {
             this.Flush();
