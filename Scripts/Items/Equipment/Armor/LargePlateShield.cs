@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x4204, 0x4208)]
+    [Flipable(0x4204, 0x4208)]
     public class LargePlateShield : BaseShield
     {
         [Constructable]
@@ -23,8 +23,7 @@ namespace Server.Items
         public override int InitMinHits => 50;
         public override int InitMaxHits => 65;
         public override int StrReq => 90;
-        public override bool CanBeWornByGargoyles => true;
-        public override Race RequiredRace => Race.Gargoyle;
+
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);

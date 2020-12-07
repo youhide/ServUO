@@ -3,7 +3,7 @@ using Server.Engines.Craft;
 namespace Server.Items
 {
     [Alterable(typeof(DefTailoring), typeof(GargishLeatherLegs))]
-    [FlipableAttribute(0x2FC9, 0x317F)]
+    [Flipable(0x2FC9, 0x317F)]
     public class LeafLegs : BaseArmor
     {
         [Constructable]
@@ -18,7 +18,6 @@ namespace Server.Items
         {
         }
 
-        public override Race RequiredRace => Race.Elf;
         public override int BasePhysicalResistance => 2;
         public override int BaseFireResistance => 3;
         public override int BaseColdResistance => 2;

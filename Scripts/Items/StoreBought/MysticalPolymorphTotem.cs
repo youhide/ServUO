@@ -51,7 +51,7 @@ namespace Server.Items
 
             if (CostumeCreatureName != null)
             {
-                list.Add(1158707, String.Format("{0}", CostumeCreatureName)); // a ~1_name~ costume
+                list.Add(1158707, string.Format("{0}", CostumeCreatureName)); // a ~1_name~ costume
             }
         }
 
@@ -175,6 +175,7 @@ namespace Server.Items
 
                     m_Totem.CostumeCreatureName = costume.CreatureName;
                     m_Totem.CostumeBody = costume.CostumeBody;
+                    m_Totem.CostumeHue = costume.Hue;
 
                     m_Totem.InvalidateProperties();
 
@@ -196,7 +197,7 @@ namespace Server.Items
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt();
 
             CostumeCreatureName = reader.ReadString();
             CostumeBody = reader.ReadInt();

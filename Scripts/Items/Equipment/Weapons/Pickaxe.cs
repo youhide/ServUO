@@ -2,7 +2,7 @@ using Server.Engines.Harvest;
 
 namespace Server.Items
 {
-    [FlipableAttribute(0xE86, 0xE85)]
+    [Flipable(0xE86, 0xE85)]
     public class Pickaxe : BaseAxe, IUsesRemaining, IHarvestTool
     {
         [Constructable]
@@ -28,9 +28,6 @@ namespace Server.Items
         public override float Speed => 3.00f;
         public override int InitMinHits => 31;
         public override int InitMaxHits => 60;
-
-        public override bool CanBeWornByGargoyles => true;
-
         public override WeaponAnimation DefAnimation => WeaponAnimation.Slash1H;
 		
         public override void Serialize(GenericWriter writer)

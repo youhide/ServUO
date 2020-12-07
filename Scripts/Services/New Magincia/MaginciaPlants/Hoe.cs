@@ -28,8 +28,6 @@ namespace Server.Items
         public override int InitMinHits => 31;
         public override int InitMaxHits => 60;
 
-        public override bool CanBeWornByGargoyles => true;
-
         public override WeaponAnimation DefAnimation => WeaponAnimation.Slash1H;
 
         public override void OnDoubleClick(Mobile from)
@@ -88,8 +86,10 @@ namespace Server.Items
                                 from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1150492); // You till a small area to plant.                                
                                 from.Animate(AnimationType.Attack, 3);
 
-                                MaginciaPlantItem dirt = new MaginciaPlantItem();
-                                dirt.Owner = from;
+                                MaginciaPlantItem dirt = new MaginciaPlantItem
+                                {
+                                    Owner = from
+                                };
                                 dirt.StartTimer();
 
                                 MaginciaPlantSystem.OnPlantPlanted(from, from.Map);

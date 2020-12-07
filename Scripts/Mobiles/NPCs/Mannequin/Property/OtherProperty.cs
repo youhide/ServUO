@@ -1,4 +1,6 @@
 using Server.Items;
+using Server.Misc;
+
 using System.Collections.Generic;
 
 namespace Server.Mobiles.MannequinProperty
@@ -120,7 +122,7 @@ namespace Server.Mobiles.MannequinProperty
 
         public double GetPropertyValue(Item item)
         {
-            return item is BaseArmor ? Misc.RegenRates.GetArmorMeditationValue((BaseArmor)item) : 0;
+            return item is BaseArmor ? RegenRates.GetArmorMeditationValue((BaseArmor)item) : 0;
         }
 
         public override bool Matches(Item item)
@@ -158,19 +160,7 @@ namespace Server.Mobiles.MannequinProperty
 
         public override bool Matches(Item item)
         {
-            if (item is BaseArmor && ((BaseArmor)item).CanBeWornByGargoyles)
-                return true;
-
-            if (item is BaseJewel && ((BaseJewel)item).CanBeWornByGargoyles)
-                return true;
-
-            if (item is BaseWeapon && ((BaseWeapon)item).CanBeWornByGargoyles)
-                return true;
-
-            if (item is BaseClothing && ((BaseClothing)item).CanBeWornByGargoyles)
-                return true;
-
-            return false;
+            return RaceDefinitions.GetRequiredRace(item) == Race.Gargoyle;
         }
     }
 
@@ -184,19 +174,7 @@ namespace Server.Mobiles.MannequinProperty
 
         public override bool Matches(Item item)
         {
-            if (item is BaseArmor && ((BaseArmor)item).RequiredRace == Race.Elf)
-                return true;
-
-            if (item is BaseJewel && ((BaseJewel)item).RequiredRace == Race.Elf)
-                return true;
-
-            if (item is BaseWeapon && ((BaseWeapon)item).RequiredRace == Race.Elf)
-                return true;
-
-            if (item is BaseClothing && ((BaseClothing)item).RequiredRace == Race.Elf)
-                return true;
-
-            return false;
+            return RaceDefinitions.GetRequiredRace(item) == Race.Elf;
         }
     }
 

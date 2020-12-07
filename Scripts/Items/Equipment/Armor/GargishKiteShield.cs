@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x4201, 0x4206)]
+    [Flipable(0x4201, 0x4206)]
     public class GargishKiteShield : BaseShield, IDyable
     {
         [Constructable]
@@ -23,8 +23,7 @@ namespace Server.Items
         public override int InitMinHits => 45;
         public override int InitMaxHits => 60;
         public override int StrReq => 45;
-        public override bool CanBeWornByGargoyles => true;
-        public override Race RequiredRace => Race.Gargoyle;
+
         public bool Dye(Mobile from, DyeTub sender)
         {
             if (Deleted)

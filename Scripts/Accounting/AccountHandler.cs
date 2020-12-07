@@ -30,33 +30,7 @@ namespace Server.Misc
         private static readonly bool RestrictDeletion = Config.Get("Accounts.RestrictDeletion", !TestCenter.Enabled);
         private static readonly TimeSpan DeleteDelay = Config.Get("Accounts.DeleteDelay", TimeSpan.FromDays(7.0));
 
-        private static readonly CityInfo[] StartingCitiesT2A = new CityInfo[]
-        {
-            new CityInfo("New Haven",   "New Haven Bank",   1150168, 3503,  2574,   14, Map.Felucca),
-            new CityInfo("Yew", "The Empath Abbey", 1075072, 633,   858,    0, Map.Felucca),
-            new CityInfo("Minoc", "The Barnacle", 1075073, 2476,    413,    15, Map.Felucca),
-            new CityInfo("Britain", "The Wayfarer's Inn",   1075074, 1602,  1591,   20, Map.Felucca),
-            new CityInfo("Moonglow",    "The Scholars Inn", 1075075, 4408,  1168,   0, Map.Felucca),
-            new CityInfo("Trinsic", "The Traveler's Inn",   1075076, 1845,  2745,   0, Map.Felucca),
-            new CityInfo("Jhelom", "The Mercenary Inn", 1075078, 1374,  3826,   0, Map.Felucca),
-            new CityInfo("Skara Brae",  "The Falconer's Inn",   1075079, 618,   2234,   0, Map.Felucca),
-            new CityInfo("Vesper", "The Ironwood Inn",  1075080, 2771,  976,    0, Map.Felucca)
-        };
-
         private static readonly CityInfo[] StartingCities = new CityInfo[]
-        {
-            new CityInfo("New Haven",   "New Haven Bank",   1150168, 3503,  2574,   14),
-            new CityInfo("Yew", "The Empath Abbey", 1075072, 633,   858,    0),
-            new CityInfo("Minoc", "The Barnacle", 1075073, 2476,    413,    15),
-            new CityInfo("Britain", "The Wayfarer's Inn",   1075074, 1602,  1591,   20),
-            new CityInfo("Moonglow",    "The Scholars Inn", 1075075, 4408,  1168,   0),
-            new CityInfo("Trinsic", "The Traveler's Inn",   1075076, 1845,  2745,   0),
-            new CityInfo("Jhelom", "The Mercenary Inn", 1075078, 1374,  3826,   0),
-            new CityInfo("Skara Brae",  "The Falconer's Inn",   1075079, 618,   2234,   0),
-            new CityInfo("Vesper", "The Ironwood Inn",  1075080, 2771,  976,    0)
-        };
-
-        private static readonly CityInfo[] StartingCitiesSA = new CityInfo[]
         {
             new CityInfo("New Haven",   "New Haven Bank",   1150168, 3503,  2574,   14),
             new CityInfo("Yew", "The Empath Abbey", 1075072, 633,   858,    0),
@@ -84,7 +58,7 @@ namespace Server.Misc
         };
 
         private static AccessLevel m_LockdownLevel;
-        private static Dictionary<IPAddress, Int32> m_IPTable;
+        private static Dictionary<IPAddress, int> m_IPTable;
 
         public static AccessLevel LockdownLevel
         {
@@ -98,13 +72,13 @@ namespace Server.Misc
             }
         }
 
-        public static Dictionary<IPAddress, Int32> IPTable
+        public static Dictionary<IPAddress, int> IPTable
         {
             get
             {
                 if (m_IPTable == null)
                 {
-                    m_IPTable = new Dictionary<IPAddress, Int32>();
+                    m_IPTable = new Dictionary<IPAddress, int>();
 
                     foreach (Account a in Accounts.GetAccounts().OfType<Account>())
                     {
@@ -214,13 +188,13 @@ namespace Server.Misc
                         * Please check your Journal for messages every few minutes.
                         */
 
-                        PageQueue.Enqueue(new PageEntry(from, String.Format("[Automated: Change Password]<br>Desired password: {0}<br>Current IP address: {1}<br>Account IP address: {2}", pass, ipAddress, accessList[0]), PageType.Account));
+                        PageQueue.Enqueue(new PageEntry(from, string.Format("[Automated: Change Password]<br>Desired password: {0}<br>Current IP address: {1}<br>Account IP address: {2}", pass, ipAddress, accessList[0]), PageType.Account));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Server.Diagnostics.ExceptionLogging.LogException(ex);
+                Diagnostics.ExceptionLogging.LogException(ex);
             }
         }
 
@@ -377,7 +351,7 @@ namespace Server.Misc
                 }
                 else
                 {
-                    e.CityInfo = StartingCitiesSA;
+                    e.CityInfo = StartingCities;
                 }
             }
 
@@ -450,7 +424,7 @@ namespace Server.Misc
                     Console.WriteLine("Client: {0}: Deleting character {1} (0x{2:X})", state, index, m.Serial.Value);
                     Utility.PopColor();
 
-                    acct.Comments.Add(new AccountComment("System", String.Format("Character #{0} {1} deleted by {2}", index + 1, m, state)));
+                    acct.Comments.Add(new AccountComment("System", string.Format("Character #{0} {1} deleted by {2}", index + 1, m, state)));
 
                     m.Delete();
                     state.Send(new CharacterListUpdate(acct));

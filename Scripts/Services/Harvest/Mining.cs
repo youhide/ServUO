@@ -96,7 +96,7 @@ namespace Server.Engines.Harvest
                 new HarvestVein(05.6, 0.5, res[5], res[0]), // Gold
                 new HarvestVein(04.2, 0.5, res[6], res[0]), // Agapite
                 new HarvestVein(02.8, 0.5, res[7], res[0]), // Verite
-                new HarvestVein(01.4, 0.5, res[8], res[0])// Valorite
+                new HarvestVein(01.4, 0.5, res[8], res[0]), // Valorite
             };
 
             oreAndStone.Resources = res;
@@ -376,7 +376,7 @@ namespace Server.Engines.Harvest
                     }
                     catch (Exception e)
                     {
-                        Server.Diagnostics.ExceptionLogging.LogException(e);
+                        Diagnostics.ExceptionLogging.LogException(e);
                     }
                 }
             }
@@ -418,7 +418,7 @@ namespace Server.Engines.Harvest
 
                     if (!dungeon)
                     {
-                        niter.MoveToWorld(new Point3D(loc.X, loc.Y, from.Z + 3), from.Map);
+                        niter.MoveToWorld(new Point3D(loc.X, loc.Y, from.Z), from.Map);
                         from.SendLocalizedMessage(1149918, niter.Size.ToString()); //You have uncovered a ~1_SIZE~ deposit of niter! Mine it to obtain saltpeter.
                         NiterDeposit.AddBank(bank);
                         return true;

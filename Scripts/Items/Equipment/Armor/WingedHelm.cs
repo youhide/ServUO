@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x2B73, 0x316A)]
+    [Flipable(0x2B73, 0x316A)]
     public class WingedHelm : BaseArmor
     {
         [Constructable]
@@ -15,7 +15,6 @@ namespace Server.Items
         {
         }
 
-        public override Race RequiredRace => Race.Elf;
         public override int BasePhysicalResistance => 5;
         public override int BaseFireResistance => 1;
         public override int BaseColdResistance => 2;

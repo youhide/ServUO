@@ -41,9 +41,10 @@ namespace Server.Items
             {
                 from.SendLocalizedMessage(503248); // Your godly powers allow you to place this vendor whereever you wish.
 
-                Mobile v = new CommissionPlayerVendor(from, BaseHouse.FindHouseAt(from));
-
-                v.Direction = from.Direction & Direction.Mask;
+                Mobile v = new CommissionPlayerVendor(from, BaseHouse.FindHouseAt(from))
+                {
+                    Direction = from.Direction & Direction.Mask
+                };
                 v.MoveToWorld(from.Location, from.Map);
 
                 v.SayTo(from, 503246); // Ah! it feels good to be working again.
@@ -60,11 +61,7 @@ namespace Server.Items
                 {
                     from.SendLocalizedMessage(503240); // Vendors can only be placed in houses.	
                 }
-                else if (!BaseHouse.NewVendorSystem && !house.IsFriend(from))
-                {
-                    from.SendLocalizedMessage(503242); // You must ask the owner of this building to name you a friend of the household in order to place a vendor here.
-                }
-                else if (BaseHouse.NewVendorSystem && !house.IsOwner(from))
+                else if (!house.IsOwner(from))
                 {
                     from.SendLocalizedMessage(1062423); // Only the house owner can directly place vendors.  Please ask the house owner to offer you a vendor contract so that you may place a vendor in this house.
                 }
@@ -87,9 +84,10 @@ namespace Server.Items
                     }
                     else
                     {
-                        Mobile v = new CommissionPlayerVendor(from, house);
-
-                        v.Direction = from.Direction & Direction.Mask;
+                        Mobile v = new CommissionPlayerVendor(from, house)
+                        {
+                            Direction = from.Direction & Direction.Mask
+                        };
                         v.MoveToWorld(from.Location, from.Map);
 
                         v.SayTo(from, 503246); // Ah! it feels good to be working again.

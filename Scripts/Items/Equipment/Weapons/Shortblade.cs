@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x907, 0x4076)]
+    [Flipable(0x907, 0x4076)]
     public class Shortblade : BaseSword
     {
         [Constructable]
@@ -29,9 +29,6 @@ namespace Server.Items
         public override SkillName DefSkill => SkillName.Fencing;
         public override WeaponType DefType => WeaponType.Piercing;
         public override WeaponAnimation DefAnimation => WeaponAnimation.Pierce1H;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

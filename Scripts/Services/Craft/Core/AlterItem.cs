@@ -4,7 +4,6 @@ using Server.SkillHandlers;
 using Server.Targeting;
 using System;
 using System.Linq;
-using Server.Mobiles;
 
 namespace Server.Engines.Craft
 {
@@ -172,7 +171,7 @@ namespace Server.Engines.Craft
                     number = 1094793;
                 }
             }
-            else if (!Server.SkillHandlers.Imbuing.CheckSoulForge(from, 2, false, false))
+            else if (!Imbuing.CheckSoulForge(from, 2, false, false))
             {
                 number = 1111867; // You must be near a soulforge to alter an item.
             }
@@ -288,10 +287,10 @@ namespace Server.Engines.Craft
                 {
                     newitem.Name = origItem.Name;
                 }
-                else if (Server.Engines.VendorSearching.VendorSearch.StringList != null)
+                else if (VendorSearching.VendorSearch.StringList != null)
                 {
                     if (origItem.LabelNumber > 0 && RetainsName(origItem))
-                        newitem.Name = Server.Engines.VendorSearching.VendorSearch.StringList.GetString(origItem.LabelNumber);
+                        newitem.Name = VendorSearching.VendorSearch.StringList.GetString(origItem.LabelNumber);
                 }
 
                 AlterResists(newitem, origItem);
@@ -375,7 +374,7 @@ namespace Server.Engines.Craft
                 if (weapon.SetID != SetItem.None || !weapon.CanAlter || weapon.NegativeAttributes.Antique != 0)
                     return false;
 
-                if ((weapon.RequiredRace != null && weapon.RequiredRace == Race.Gargoyle && !weapon.IsArtifact))
+                if ((Race.Gargoyle.ValidateEquipment(weapon) && !weapon.IsArtifact))
                     return false;
             }
 
@@ -386,7 +385,7 @@ namespace Server.Engines.Craft
                 if (armor.SetID != SetItem.None || !armor.CanAlter || armor.NegativeAttributes.Antique != 0)
                     return false;
 
-                if ((armor.RequiredRace != null && armor.RequiredRace == Race.Gargoyle && !armor.IsArtifact))
+                if ((Race.Gargoyle.ValidateEquipment(armor) && !armor.IsArtifact))
                     return false;
 
                 if (ArmorType.Any(t => t == armor.GetType()) && armor.Resource > CraftResource.Iron)
@@ -400,7 +399,7 @@ namespace Server.Engines.Craft
                 if (cloth.SetID != SetItem.None || !cloth.CanAlter || cloth.NegativeAttributes.Antique != 0)
                     return false;
 
-                if ((cloth.RequiredRace != null && cloth.RequiredRace == Race.Gargoyle && !cloth.IsArtifact))
+                if ((Race.Gargoyle.ValidateEquipment(cloth) && !cloth.IsArtifact))
                     return false;
             }
 

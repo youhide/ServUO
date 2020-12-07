@@ -1,3 +1,4 @@
+using Server.Engines.CityLoyalty;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
@@ -191,6 +192,10 @@ namespace Server.Menus.Questions
                 if (m_Mobile == m_Sender)
                     m_Mobile.SendLocalizedMessage(1010588); // You choose not to go to any city.
             }
+            else if (CityTradeSystem.HasTrade(m_Mobile))
+            {
+                m_Mobile.SendLocalizedMessage(1151733); // You cannot do that while carrying a Trade Order.
+            }
             else
             {
                 int index = info.ButtonID - 1;
@@ -227,8 +232,6 @@ namespace Server.Menus.Questions
                 m_Mobile.SendLocalizedMessage(1010589); // You will be teleported within the next two minutes.
 
                 new TeleportTimer(m_Mobile, entry, TimeSpan.FromSeconds(10.0 + (Utility.RandomDouble() * 110.0))).Start();
-
-                m_Mobile.UsedStuckMenu();
             }
             else
             {
@@ -295,6 +298,12 @@ namespace Server.Menus.Questions
                 {
                     m_Mobile.Frozen = true;
                 }
+				else if (CityTradeSystem.HasTrade(m_Mobile))
+				{
+					m_Mobile.Frozen = false;
+                    Stop();
+					m_Mobile.SendLocalizedMessage(1151733); // You cannot do that while carrying a Trade Order.
+				}
                 else
                 {
                     m_Mobile.Frozen = false;
@@ -320,7 +329,7 @@ namespace Server.Menus.Questions
 
                     if (m_Mobile.Map != Map.Internal)
                     {
-                        Mobiles.BaseCreature.TeleportPets(m_Mobile, dest, destMap);
+                        BaseCreature.TeleportPets(m_Mobile, dest, destMap);
                         m_Mobile.MoveToWorld(dest, destMap);
                     }
                     else

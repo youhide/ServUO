@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x2B78, 0x316F)]
+    [Flipable(0x2B78, 0x316F)]
     public class HidePants : BaseArmor
     {
         [Constructable]
@@ -15,7 +15,6 @@ namespace Server.Items
         {
         }
 
-        public override Race RequiredRace => Race.Elf;
         public override int BasePhysicalResistance => 3;
         public override int BaseFireResistance => 3;
         public override int BaseColdResistance => 4;

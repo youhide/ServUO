@@ -7,7 +7,6 @@ using Server.Gumps;
 using Server.Items;
 using Server.Misc;
 using Server.Mobiles;
-using Server.Multis.Deeds;
 using Server.Network;
 using Server.Regions;
 using Server.Targeting;
@@ -20,8 +19,6 @@ namespace Server.Multis
     public abstract class BaseHouse : BaseMulti
     {
         public static int AccountHouseLimit { get; } = Config.Get("Housing.AccountHouseLimit", 1);
-
-        public static bool NewVendorSystem => true; // Is new player vendor system enabled?
 
         public static double GlobalBonusStorageScalar => 1.4;
 
@@ -326,8 +323,6 @@ namespace Server.Multis
 
         private static readonly Dictionary<Mobile, List<BaseHouse>> m_Table = new Dictionary<Mobile, List<BaseHouse>>();
 
-        public virtual bool IsAosRules => true;
-
         public virtual bool IsActive => true;
 
         public virtual HousePlacementEntry GetAosEntry()
@@ -367,6 +362,7 @@ namespace Server.Multis
             typeof(BaseBoard),              typeof(Aquarium),
             typeof(FishBowl),               typeof(BaseSpecialScrollBook),
             typeof(Engines.Plants.SeedBox), typeof(JewelryBox),
+            typeof(FermentationBarrel)
         };
 
         // Not Included Storage
@@ -422,17 +418,6 @@ namespace Server.Multis
 
             fromLockdowns += GetCommissionVendorLockdowns();
 
-            if (!NewVendorSystem)
-            {
-                foreach (Mobile vendor in PlayerVendors)
-                {
-                    if (vendor.Backpack != null)
-                    {
-                        fromVendors += vendor.Backpack.TotalItems;
-                    }
-                }
-            }
-
             if (MovingCrate != null)
             {
                 fromMovingCrate += MovingCrate.TotalItems;
@@ -461,7 +446,7 @@ namespace Server.Multis
             return false;
         }
 
-        public virtual int GetNewVendorSystemMaxVendors()
+        public virtual int GetVendorSystemMaxVendors()
         {
             HousePlacementEntry hpe = GetAosEntry();
 
@@ -473,13 +458,7 @@ namespace Server.Multis
 
         public virtual bool CanPlaceNewVendor()
         {
-            if (!IsAosRules)
-                return true;
-
-            if (!NewVendorSystem)
-                return CheckAosLockdowns(10);
-
-            return (PlayerVendors.Count + VendorRentalContracts.Count) < GetNewVendorSystemMaxVendors();
+            return (PlayerVendors.Count + VendorRentalContracts.Count) < GetVendorSystemMaxVendors();
         }
 
         public const int MaximumBarkeepCount = 2;
@@ -1033,9 +1012,6 @@ namespace Server.Multis
             if (Secures != null)
                 v += Secures.Where(x => !LockDowns.ContainsKey(x.Item)).Count();
 
-            if (!NewVendorSystem)
-                v += PlayerVendors.Count * 10;
-
             return v;
         }
 
@@ -1087,7 +1063,7 @@ namespace Server.Multis
         {
             BaseHouse house = FindHouseAt(cont);
 
-            if (house == null || !house.IsAosRules)
+            if (house == null)
                 return true;
 
             if (house.IsSecure(cont) && !house.CheckAosStorage(1 + item.TotalItems + plusItems))
@@ -1143,6 +1119,33 @@ namespace Server.Multis
                 return null;
 
             return FindHouseAt(item.GetWorldLocation(), item.Map, item.ItemData.Height);
+        }
+
+        public static BaseHouse FindHouseAt(IEntity e)
+        {
+            if (e == null || e.Deleted)
+                return null;
+
+            if (e is Item)
+            {
+                return FindHouseAt((Item)e);
+            }
+            else if (e is Mobile)
+            {
+                return FindHouseAt((Mobile)e);
+            }
+
+            return FindHouseAt(e.Location, e.Map, 16);
+        }
+
+        public static BaseHouse FindHouseAt(IPoint3D p, Map map)
+        {
+            if (p == null)
+            {
+                return null;
+            }
+
+            return FindHouseAt(new Point3D(p), map, 16);
         }
 
         public static BaseHouse FindHouseAt(Point3D loc, Map map, int height)
@@ -1249,6 +1252,40 @@ namespace Server.Multis
         {
             typeof(PotionKeg)
         };
+
+        public virtual bool IsStairArea(IPoint3D p)
+        {
+            bool frontStairs;
+            return IsStairArea(p, out frontStairs);
+        }
+
+        public virtual bool IsStairArea(IPoint3D p, out bool frontStairs)
+        {
+            frontStairs = false;
+            MultiComponentList mcl = Components;
+
+            int x = p.X - (X + mcl.Min.X);
+            int y = p.Y - (Y + mcl.Min.Y);
+            frontStairs = false;
+
+            if (x < 0 || x >= mcl.Width || y < 0 || y >= mcl.Height)
+            {
+                return false;
+            }
+
+            var id = mcl.List.FirstOrDefault(entry =>
+                p.X - X == entry.m_OffsetX &&
+                p.Y - Y == entry.m_OffsetY &&
+                (p.Z - TileData.ItemTable[entry.m_ItemID].CalcHeight) - Z == entry.m_OffsetZ).m_ItemID;
+
+            if (id <= 0 || (!HouseFoundation.IsStair(id) && !HouseFoundation.IsStairBlock(id)))
+            {
+                return false;
+            }
+
+            frontStairs = mcl.Tiles[x][y].Length == 1;
+            return true;
+        }
 
         public virtual bool IsInside(Point3D p, int height)
         {
@@ -1755,7 +1792,7 @@ namespace Server.Multis
                 * Offset		0	2	4	6	8	10	12	14
                 * DoorFacing	2	3	2	3	6	7	6	7
                 */
-                int offset = itemID - 0x436E;
+            int offset = itemID - 0x436E;
                 DoorFacing facing = (DoorFacing)((offset / 2 + 2 * ((1 + offset / 4) % 2)) % 8);
                 door = new GenericHouseDoor(facing, itemID, 0xEA, 0xF1, false);
             }
@@ -1794,11 +1831,6 @@ namespace Server.Multis
 
             if (door != null)
             {
-                if (from != null)
-                {
-                    door.KeyValue = CreateKeys(from);
-                }
-
                 AddDoor(door, xOffset, yOffset, zOffset);
             }
             else
@@ -1815,32 +1847,6 @@ namespace Server.Multis
             * DoorFacing	2	3	6	7
             */
             return (DoorFacing)((offset / 2 + 2 * (1 + offset / 4)) % 8);
-        }
-
-        public uint CreateKeys(Mobile m)
-        {
-            uint value = Key.RandomValue();
-
-            if (!IsAosRules)
-            {
-                Key packKey = new Key(KeyType.Gold);
-                Key bankKey = new Key(KeyType.Gold);
-
-                packKey.KeyValue = value;
-                bankKey.KeyValue = value;
-
-                packKey.LootType = LootType.Newbied;
-                bankKey.LootType = LootType.Newbied;
-
-                BankBox box = m.BankBox;
-
-                if (!box.TryDropItem(m, bankKey, false))
-                    bankKey.Delete();
-
-                m.AddToBackpack(packKey);
-            }
-
-            return value;
         }
 
         public BaseDoor[] AddSouthDoors(int x, int y, int z)
@@ -1908,9 +1914,10 @@ namespace Server.Multis
 
             if (m_Trash == null || m_Trash.Deleted)
             {
-                m_Trash = new TrashBarrel();
-
-                m_Trash.Movable = false;
+                m_Trash = new TrashBarrel
+                {
+                    Movable = false
+                };
                 m_Trash.MoveToWorld(from.Location, from.Map);
 
                 from.SendLocalizedMessage(502121); /* You have a new trash barrel.
@@ -2035,7 +2042,7 @@ namespace Server.Multis
                 {
                     m.SendLocalizedMessage(501736); // You must lockdown the container first!
                 }
-                else if (!(item is VendorRentalContract) && (IsAosRules ? (!CheckAosLockdowns(amt) || !CheckAosStorage(amt)) : (LockDownCount + amt) > MaxLockDowns))
+                else if (!(item is VendorRentalContract) && ((!CheckAosLockdowns(amt) || !CheckAosStorage(amt))))
                 {
                     m.SendLocalizedMessage(1005379);//That would exceed the maximum lock down limit for this house
                 }
@@ -2098,7 +2105,7 @@ namespace Server.Multis
                 bool valid = m_House != null && Sextant.Format(m_House.Location, m_House.Map, ref xLong, ref yLat, ref xMins, ref yMins, ref xEast, ref ySouth);
 
                 if (valid)
-                    location = String.Format("{0}° {1}'{2}, {3}° {4}'{5}", yLat, yMins, ySouth ? "S" : "N", xLong, xMins, xEast ? "E" : "W");
+                    location = string.Format("{0}° {1}'{2}, {3}° {4}'{5}", yLat, yMins, ySouth ? "S" : "N", xLong, xMins, xEast ? "E" : "W");
                 else
                     location = "unknown";
 
@@ -2164,12 +2171,11 @@ namespace Server.Multis
                 * You should double-check the security settings on any doors and teleporters in the house.
                 */
 
-                m_House.RemoveKeys(from);
                 m_House.Owner = to;
                 m_House.Bans.Clear();
                 m_House.Friends.Clear();
                 m_House.CoOwners.Clear();
-                m_House.ChangeLocks(to);
+                m_House.Secures.ForEach(x => { x.Owner = to; });
                 m_House.LastTraded = DateTime.UtcNow;
 
                 m_House.OnTransfer();
@@ -2208,7 +2214,7 @@ namespace Server.Multis
             if (Deleted || !from.CheckAlive() || !IsOwner(from))
                 return;
 
-            if (NewVendorSystem && HasPersonalVendors)
+            if (HasPersonalVendors)
             {
                 from.SendLocalizedMessage(1062467); // You cannot trade this house while you still have personal vendors inside.
             }
@@ -2272,7 +2278,7 @@ namespace Server.Multis
             if (Deleted || !from.CheckAlive() || !IsOwner(from))
                 return;
 
-            if (NewVendorSystem && HasPersonalVendors)
+            if (HasPersonalVendors)
             {
                 from.SendLocalizedMessage(1062467); // You cannot trade this house while you still have personal vendors inside.
             }
@@ -2472,16 +2478,11 @@ namespace Server.Multis
                 {
                     m.SendLocalizedMessage(1010424); // You cannot secure 
                 }
-                else if (!IsAosRules && SecureCount >= MaxSecures)
-                {
-                    // The maximum number of secure items has been reached :
-                    m.SendLocalizedMessage(1008142, true, MaxSecures.ToString());
-                }
-                else if (IsAosRules ? !CheckAosLockdowns(1) : ((LockDownCount + 125) >= MaxLockDowns))
+                else if (!CheckAosLockdowns(1))
                 {
                     m.SendLocalizedMessage(1005379); // That would exceed the maximum lock down limit for this house
                 }
-                else if (IsAosRules && !CheckAosStorage(item.TotalItems))
+                else if (!CheckAosStorage(item.TotalItems))
                 {
                     m.SendLocalizedMessage(1061839); // This action would exceed the secure storage limit of the house.
                 }
@@ -2524,7 +2525,7 @@ namespace Server.Multis
 
         public virtual bool IsCombatRestricted(Mobile m)
         {
-            if (m == null || !m.Player || m.AccessLevel >= AccessLevel.GameMaster || !IsAosRules || (m_Owner != null && m_Owner.AccessLevel >= AccessLevel.GameMaster))
+            if (m == null || !m.Player || m.AccessLevel >= AccessLevel.GameMaster || (m_Owner != null && m_Owner.AccessLevel >= AccessLevel.GameMaster))
                 return false;
 
             for (int i = 0; i < m.Aggressed.Count; ++i)
@@ -2669,7 +2670,7 @@ namespace Server.Multis
                 return;
             }
 
-            if (IsAosRules ? !CheckAosLockdowns(1) : ((LockDownCount + 1) > MaxLockDowns))
+            if (!CheckAosLockdowns(1))
             {
                 from.SendLocalizedMessage(1005379);//That would exceed the maximum lock down limit for this house
                 return;
@@ -2704,10 +2705,12 @@ namespace Server.Multis
                 }
             }
 
-            StrongBox sb = new StrongBox(from, this);
-            sb.Movable = false;
-            sb.IsLockedDown = false;
-            sb.IsSecure = true;
+            StrongBox sb = new StrongBox(from, this)
+            {
+                Movable = false,
+                IsLockedDown = false,
+                IsSecure = true
+            };
             Secures.Add(new SecureInfo(sb, SecureLevel.CoOwners, from));
             sb.MoveToWorld(from.Location, from.Map);
         }
@@ -2805,7 +2808,7 @@ namespace Server.Multis
             {
                 from.SendLocalizedMessage(501352); // You may not eject someone who is not in your house!
             }
-            else if (!Public && IsAosRules)
+            else if (!Public)
             {
                 from.SendLocalizedMessage(1062521); // You cannot ban someone from a private house.  Revoke their access instead.
             }
@@ -3088,7 +3091,6 @@ namespace Server.Multis
             writer.Write(BuiltOn);
             writer.Write(LastTraded);
 
-            //writer.WriteItemList(m_Addons, true);
             writer.Write(Addons.Count);
             foreach (KeyValuePair<Item, Mobile> kvp in Addons)
             {
@@ -3337,30 +3339,7 @@ namespace Server.Multis
                         if (version < 14)
                             m_RelativeBanLocation = BaseBanLocation;
 
-                        if (version < 12)
-                        {
-                            VendorRentalContracts = new List<Item>();
-                            InternalizedVendors = new List<Mobile>();
-                        }
-
-                        if (version < 4)
-                            Addons = new Dictionary<Item, Mobile>();
-
-                        if (version < 7)
-                            Access = new List<Mobile>();
-
-                        if (version < 8)
-                            Price = DefaultPrice;
-
                         m_Owner = reader.ReadMobile();
-
-                        if (version < 5)
-                        {
-                            count = reader.ReadInt();
-
-                            for (int i = 0; i < count; i++)
-                                reader.ReadRect2D();
-                        }
 
                         UpdateRegion();
 
@@ -3404,23 +3383,6 @@ namespace Server.Multis
                         for (int i = 0; i < VendorRentalContracts.Count; ++i)
                             VendorRentalContracts[i].IsLockedDown = true;
 
-                        if (version < 3)
-                        {
-                            List<Item> items = reader.ReadStrongItemList();
-                            Secures = new List<SecureInfo>(items.Count);
-
-                            for (int i = 0; i < items.Count; ++i)
-                            {
-                                Container c = items[i] as Container;
-
-                                if (c != null)
-                                {
-                                    c.IsSecure = true;
-                                    Secures.Add(new SecureInfo(c, SecureLevel.CoOwners, Owner));
-                                }
-                            }
-                        }
-
                         MaxLockDowns = reader.ReadInt();
                         MaxSecures = reader.ReadInt();
 
@@ -3440,9 +3402,6 @@ namespace Server.Multis
                         break;
                     }
             }
-
-            if (version <= 1)
-                ChangeSignType(0xBD2);//private house, plain brass sign
 
             if (version < 10)
             {
@@ -3471,8 +3430,6 @@ namespace Server.Multis
                 if (RelocatedEntities.Count > 0)
                     Timer.DelayCall(TimeSpan.Zero, RestoreRelocatedEntities);
 
-                //if (m_Owner == null && m_Friends.Count == 0 && m_CoOwners.Count == 0)
-                //    Timer.DelayCall(TimeSpan.FromSeconds(10.0), new TimerCallback(Delete));
             }
 
             if (version == 19)
@@ -4099,7 +4056,7 @@ namespace Server.Multis
                     }
                     else
                     {
-                        m.SendMessage("You already own {0} houses, you may not place any more!", BaseHouse.AccountHouseLimit.ToString());
+                        m.SendMessage("You already own {0} houses, you may not place any more!", AccountHouseLimit.ToString());
                     }
                 }
 
@@ -4117,7 +4074,7 @@ namespace Server.Multis
             if (m == m_Owner || m.AccessLevel >= AccessLevel.GameMaster)
                 return true;
 
-            return IsAosRules && AccountHandler.CheckAccount(m, m_Owner);
+            return AccountHandler.CheckAccount(m, m_Owner);
         }
 
         public bool IsCoOwner(Mobile m)
@@ -4134,7 +4091,7 @@ namespace Server.Multis
                     return true;
             }
 
-            return !IsAosRules && AccountHandler.CheckAccount(m, m_Owner);
+            return false;
         }
 
         public bool IsGuildMember(Mobile m)
@@ -4145,71 +4102,13 @@ namespace Server.Multis
             return (m.Guild == Owner.Guild);
         }
 
-        public void RemoveKeys(Mobile m)
-        {
-            if (Doors != null)
-            {
-                uint keyValue = 0;
-
-                for (int i = 0; keyValue == 0 && i < Doors.Count; ++i)
-                {
-                    BaseDoor door = Doors[i] as BaseDoor;
-
-                    if (door != null)
-                        keyValue = door.KeyValue;
-                }
-
-                Key.RemoveKeys(m, keyValue);
-            }
-        }
-
-        public void ChangeLocks(Mobile m)
-        {
-            uint keyValue = CreateKeys(m);
-
-            if (Doors != null)
-            {
-                for (int i = 0; i < Doors.Count; ++i)
-                {
-                    BaseDoor door = Doors[i] as BaseDoor;
-
-                    if (door != null)
-                        door.KeyValue = keyValue;
-                }
-            }
-        }
-
-        public void RemoveLocks()
-        {
-            if (Doors != null)
-            {
-                for (int i = 0; i < Doors.Count; ++i)
-                {
-                    BaseDoor door = Doors[i] as BaseDoor;
-
-                    if (door != null)
-                    {
-                        door.KeyValue = 0;
-                        door.Locked = false;
-                    }
-                }
-            }
-        }
-
         public virtual HousePlacementEntry ConvertEntry => null;
         public virtual int ConvertOffsetX => 0;
         public virtual int ConvertOffsetY => 0;
         public virtual int ConvertOffsetZ => 0;
 
-        public virtual int DefaultPrice => 0;
-
         [CommandProperty(AccessLevel.GameMaster)]
         public int Price { get; set; }
-
-        public virtual HouseDeed GetDeed()
-        {
-            return null;
-        }
 
         public bool IsFriend(Mobile m)
         {
@@ -4761,7 +4660,7 @@ namespace Server.Multis
         {
             BaseHouse house = BaseHouse.FindHouseAt(item);
 
-            if (house == null || !house.IsAosRules)
+            if (house == null)
                 return null;
 
             bool owner = house.IsOwner(from) || (house.IsLockedDown(item) && house.CheckLockdownOwnership(from, item));
@@ -4781,7 +4680,7 @@ namespace Server.Multis
                     isOwned = house.IsLockedDown(item);
 
                 if (!isOwned)
-                    isOwned = item is BaseAddon;
+                    isOwned = item is BaseAddon || item is JewelryBox || item is Engines.Plants.SeedBox;
 
                 if (isOwned)
                     sec = (ISecurable)item;

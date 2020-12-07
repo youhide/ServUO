@@ -57,7 +57,7 @@ namespace Server.Engines.Craft
         AssassinsCowl = 1108,
         MagesHood = 1109,
         CowlOfTheMaceAndShield = 1110,
-        MagesHoodOfScholarlyInsight = 1111
+        MagesHoodOfScholarlyInsight = 1111,
 
     }
 
@@ -65,17 +65,17 @@ namespace Server.Engines.Craft
     {
         #region Statics
         private static readonly Type[] m_TailorColorables = new Type[]
-   {
+   		{
             typeof(GozaMatEastDeed), typeof(GozaMatSouthDeed),
             typeof(SquareGozaMatEastDeed), typeof(SquareGozaMatSouthDeed),
             typeof(BrocadeGozaMatEastDeed), typeof(BrocadeGozaMatSouthDeed),
             typeof(BrocadeSquareGozaMatEastDeed), typeof(BrocadeSquareGozaMatSouthDeed),
             typeof(SquareGozaMatDeed)
-   };
+   		};
 
         private static readonly Type[] m_TailorClothNonColorables = new Type[]
         {
-            typeof(DeerMask), typeof(BearMask), typeof(OrcMask), typeof(TribalMask), typeof(HornedTribalMask)
+            typeof(DeerMask), typeof(BearMask), typeof(OrcMask), typeof(TribalMask), typeof(HornedTribalMask), typeof(CuffsOfTheArchmage)
         };
 
         // singleton instance
@@ -688,7 +688,7 @@ namespace Server.Engines.Craft
             index = AddCraft(typeof(CuffsOfTheArchmage), 1049149, 1157348, 120.0, 120.1, typeof(Cloth), 1044455, 8, 1044287);
             AddRes(index, typeof(MidnightBracers), 1061093, 1, 1044253);
             AddRes(index, typeof(BloodOfTheDarkFather), 1157343, 5, 1044253);
-            AddRes(index, typeof(DarkSapphire), 1032690, 5, 1044253);
+            AddRes(index, typeof(DarkSapphire), 1032690, 4, 1044253);
             ForceNonExceptional(index);
             AddRecipe(index, (int)TailorRecipe.CuffsOfTheArchmage);
             #endregion
@@ -698,10 +698,10 @@ namespace Server.Engines.Craft
 
             // Add every material you want the player to be able to choose from
             // This will override the overridable material
-            AddSubRes(typeof(Leather), 1049150, 00.0, 1044462, 1049311);
-            AddSubRes(typeof(SpinedLeather), 1049151, 65.0, 1044462, 1049311);
-            AddSubRes(typeof(HornedLeather), 1049152, 80.0, 1044462, 1049311);
-            AddSubRes(typeof(BarbedLeather), 1049153, 99.0, 1044462, 1049311);
+            AddSubRes(typeof(Leather), 1049150, 0.0, 1044462, 1049312);
+            AddSubRes(typeof(SpinedLeather), 1049151, 65.0, 1044462, 1049312);
+            AddSubRes(typeof(HornedLeather), 1049152, 80.0, 1044462, 1049312);
+            AddSubRes(typeof(BarbedLeather), 1049153, 99.0, 1044462, 1049312);
 
             MarkOption = true;
             Repair = true;
@@ -756,8 +756,10 @@ namespace Server.Engines.Craft
 
                         foreach (KeyValuePair<int, int> kvp in bolts)
                         {
-                            UncutCloth cloth = new UncutCloth(kvp.Value * 50);
-                            cloth.Hue = kvp.Key;
+                            UncutCloth cloth = new UncutCloth(kvp.Value * 50)
+                            {
+                                Hue = kvp.Key
+                            };
 
                             DropItem(m, cloth, tool);
                         }
@@ -832,8 +834,10 @@ namespace Server.Engines.Craft
 
                         foreach (KeyValuePair<int, int> kvp in cloth)
                         {
-                            UncutCloth c = new UncutCloth(kvp.Value);
-                            c.Hue = kvp.Key;
+                            UncutCloth c = new UncutCloth(kvp.Value)
+                            {
+                                Hue = kvp.Key
+                            };
 
                             DropItem(m, c, tool);
                         }

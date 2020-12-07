@@ -312,7 +312,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0x45A4, 0x45A5)]
+    [Flipable(0x45A4, 0x45A5)]
     public class GargishClothWingArmor : BaseClothing
     {
         [Constructable]
@@ -329,8 +329,6 @@ namespace Server.Items
         }
 
         public override int StrReq => 10;
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public GargishClothWingArmor(Serial serial)
             : base(serial)
@@ -353,9 +351,6 @@ namespace Server.Items
     [Flipable(0x4002, 0x4003)]
     public class GargishFancyRobe : BaseClothing
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public GargishFancyRobe()
             : this(0)
@@ -390,9 +385,6 @@ namespace Server.Items
     [Flipable(0x4000, 0x4001)]
     public class GargishRobe : BaseClothing
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public GargishRobe()
             : this(0)

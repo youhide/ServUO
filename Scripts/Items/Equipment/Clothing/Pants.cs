@@ -138,7 +138,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0x152e, 0x152f)]
+    [Flipable(0x152e, 0x152f)]
     public class ShortPants : BasePants
     {
         [Constructable]
@@ -174,7 +174,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0x1539, 0x153a)]
+    [Flipable(0x1539, 0x153a)]
     public class LongPants : BasePants
     {
         [Constructable]
@@ -246,11 +246,9 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0x2FC3, 0x3179)]
+    [Flipable(0x2FC3, 0x3179)]
     public class ElvenPants : BasePants
     {
-        public override Race RequiredRace => Race.Elf;
-
         [Constructable]
         public ElvenPants()
             : this(0)
@@ -286,9 +284,6 @@ namespace Server.Items
 
     public class GargishClothLegs : BaseClothing
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public GargishClothLegs()
             : this(0)
@@ -335,9 +330,6 @@ namespace Server.Items
 
     public class FemaleGargishClothLegs : BaseClothing
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public FemaleGargishClothLegs()
             : this(0)
@@ -371,9 +363,6 @@ namespace Server.Items
 
     public class MaleGargishClothLegs : BaseClothing
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public MaleGargishClothLegs()
             : this(0)

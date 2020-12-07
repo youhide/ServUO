@@ -23,7 +23,7 @@ namespace Server.Mobiles
         [CommandProperty(AccessLevel.GameMaster)]
         public Point3D SpawnLocation { get; set; }
 
-        public bool IsKrampusEncounter => KrampusEncounter.Encounter != null && KrampusEncounter.Encounter.Krampus == this;
+        public bool IsKrampusEncounter => KrampusEvent.Instance.Krampus == this;
 
         [Constructable]
         public Krampus()
@@ -317,9 +317,9 @@ namespace Server.Mobiles
                     PlayerMobile m = ds.m_Mobile as PlayerMobile;
                     int ordersComplete = 0;
 
-                    if (KrampusEncounter.Encounter.CompleteTable.ContainsKey(m))
+                    if (KrampusEvent.Instance.CompleteTable.ContainsKey(m))
                     {
-                        ordersComplete = KrampusEncounter.Encounter.CompleteTable[m];
+                        ordersComplete = KrampusEvent.Instance.CompleteTable[m];
                     }
 
                     if (ordersComplete >= 3 || Utility.RandomMinMax(0, 8) <= ordersComplete)
@@ -338,9 +338,9 @@ namespace Server.Mobiles
                             case 7: item = new KrampusCoinPurse(463); break; // minion talons
                             case 8: item = new KrampusCoinPurse(588); break; // minion earrings
                             case 9: item = new KrampusPunishinList(m.Name); break;
-                            case 10: item = new SpikedWhip(); break;
-                            case 11: item = new BarbedWhip(); break;
-                            case 12: item = new BladedWhip(); break;
+                            case 10: item = new RecipeScroll(466); break; // barbed whip
+                            case 11: item = new RecipeScroll(467); break; // spiked whip
+                            case 12: item = new RecipeScroll(468); break; // bladed whip
                         }
 
                         if (item != null)
@@ -365,7 +365,7 @@ namespace Server.Mobiles
 
             if (IsKrampusEncounter)
             {
-                KrampusEncounter.Encounter.OnKrampusKilled();
+                KrampusEvent.Instance.OnKrampusKilled();
             }
 
             if (SummonedHelpers != null)

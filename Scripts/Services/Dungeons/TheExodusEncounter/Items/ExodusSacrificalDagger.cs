@@ -7,7 +7,7 @@ using System;
 namespace Server.Items
 {
     [Alterable(typeof(DefBlacksmithy), typeof(ExodusSacrificalGargishDagger))]
-    [FlipableAttribute(0x2D21, 0x2D2D)]
+    [Flipable(0x2D21, 0x2D2D)]
     public class ExodusSacrificalDagger : BaseKnife
     {
         public override int LabelNumber => 1153500;  // exodus sacrificial dagger
@@ -221,7 +221,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0x0902, 0x406A)]
+    [Flipable(0x0902, 0x406A)]
     public class ExodusSacrificalGargishDagger : ExodusSacrificalDagger
     {
         [Constructable]
@@ -230,9 +230,6 @@ namespace Server.Items
             ItemID = 0x406A;
             Weight = 4.0;
         }
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public ExodusSacrificalGargishDagger(Serial serial) : base(serial)
         {

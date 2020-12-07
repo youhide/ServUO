@@ -28,7 +28,7 @@ namespace Server.Engines.CityLoyalty
 
                 foreach (TradeEntry.TradeDetails details in Entry.Details)
                 {
-                    if (GetAmount(details.ItemType) < details.Amount)
+                    if (details.Count(this) < details.Amount)
                         return false;
                 }
 
@@ -49,9 +49,10 @@ namespace Server.Engines.CityLoyalty
             Owner = from;
             Entry = entry;
 
+            Weight = 10.0;
+
             if (CityTradeSystem.KrampusEncounterActive)
-            {
-                Weight = 10.0;
+            {                
                 Hue = Utility.Random(100);
             }
 
@@ -95,7 +96,7 @@ namespace Server.Engines.CityLoyalty
         {
             base.GetProperties(list);
 
-            list.Add(1151737, String.Format("#{0}", CityLoyaltySystem.CityLocalization(Entry.Destination))); // Destination City: ~1_city~
+            list.Add(1151737, string.Format("#{0}", CityLoyaltySystem.CityLocalization(Entry.Destination))); // Destination City: ~1_city~
             list.Add(1076255); // NO-TRADE
 
             int weight = Items.Sum(x => x.Amount);
@@ -109,9 +110,9 @@ namespace Server.Engines.CityLoyalty
                 for (int i = 0; i < Entry.Details.Count; i++)
                 {
                     if (Utility.ToInt32(Entry.Details[i].Name) > 0)
-                        list.Add(1116453 + i, String.Format("#{0}\t{1}\t{2}", Entry.Details[i].Name, GetAmount(Entry.Details[i].ItemType), Entry.Details[i].Amount)); // ~1_val~: ~2_val~/~3_val~
+                        list.Add(1116453 + i, string.Format("#{0}\t{1}\t{2}", Entry.Details[i].Name, Entry.Details[i].Count(this), Entry.Details[i].Amount)); // ~1_val~: ~2_val~/~3_val~
                     else
-                        list.Add(1116453 + i, String.Format("{0}\t{1}\t{2}", Entry.Details[i].Name, GetAmount(Entry.Details[i].ItemType), Entry.Details[i].Amount)); // ~1_val~: ~2_val~/~3_val~
+                        list.Add(1116453 + i, string.Format("{0}\t{1}\t{2}", Entry.Details[i].Name, Entry.Details[i].Count(this), Entry.Details[i].Amount)); // ~1_val~: ~2_val~/~3_val~
                 }
             }
 
@@ -146,42 +147,70 @@ namespace Server.Engines.CityLoyalty
 
             foreach (TradeEntry.TradeDetails details in Entry.Details)
             {
-                if (item.GetType() == details.ItemType)
+                if(details.Match(item.GetType()))
                 {
-                    int hasAmount = GetAmount(item.GetType());
+                    int hasAmount = details.Count(this);
 
                     if (hasAmount + item.Amount > details.Amount)
                     {
                         if (message)
+                        {
                             from.SendLocalizedMessage(1151726); // You are trying to add too many of this item to the trade order. Only add the required quantity
+                        }
 
                         break;
                     }
-                    else
-                    {
-                        canAdd = true;
-                        break;
-                    }
+
+                    canAdd = true;
+                    break;
                 }
             }
 
             if (!canAdd && message)
+            {
                 from.SendLocalizedMessage(1151725); // This trade order does not require this item.
+            }
 
             return canAdd;
         }
 
         public override int GetTotal(TotalType type)
         {
+            int total = base.GetTotal(type);
+
             if (type == TotalType.Weight)
+                total -= total * 75 / 100;
+
+            return total;
+        }
+
+        public override void UpdateTotal(Item sender, TotalType type, int delta)
+        {
+            InvalidateProperties();
+
+            base.UpdateTotal(sender, type, delta);
+        }
+
+        public override void AddItem(Item item)
+        {
+            base.AddItem(item);
+
+            InvalidateWeight();
+        }
+
+        public override void RemoveItem(Item item)
+        {
+            base.RemoveItem(item);
+
+            InvalidateWeight();
+        }
+
+        public void InvalidateWeight()
+        {
+            if (RootParent is Mobile m)
             {
-                int weight = base.GetTotal(type);
-
-                if (weight > 0)
-                    return (int)Math.Max(1, (base.GetTotal(type) * .25));
+                m.UpdateTotals();
             }
-
-            return base.GetTotal(type);
         }
 
         public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
@@ -197,8 +226,8 @@ namespace Server.Engines.CityLoyalty
 
         private class FillFromPackEntry : ContextMenuEntry
         {
-            public TradeOrderCrate Crate { get; private set; }
-            public Mobile Player { get; private set; }
+            public TradeOrderCrate Crate { get; }
+            public Mobile Player { get; }
 
             public FillFromPackEntry(TradeOrderCrate crate, Mobile player) : base(1154908, 3) // Fill from pack
             {
@@ -212,12 +241,11 @@ namespace Server.Engines.CityLoyalty
                 {
                     foreach (TradeEntry.TradeDetails detail in Crate.Entry.Details)
                     {
-                        Item[] items = Player.Backpack.FindItemsByType(detail.ItemType);
+                        var list = new List<Item>(Player.Backpack.Items);
 
-                        foreach (Item item in items)
+                        foreach (var item in list.Where(i => i.Amount == 1 && Crate.TryAddItem(Player, i, false)))
                         {
-                            if (item.Amount == 1 && Crate.TryAddItem(Player, item, false))
-                                Crate.DropItem(item);
+                            Crate.DropItem(item);
                         }
                     }
                 }
@@ -226,8 +254,8 @@ namespace Server.Engines.CityLoyalty
 
         private class CancelOrderEntry : ContextMenuEntry
         {
-            public TradeOrderCrate Crate { get; private set; }
-            public Mobile Player { get; private set; }
+            public TradeOrderCrate Crate { get; }
+            public Mobile Player { get; }
 
             public CancelOrderEntry(TradeOrderCrate crate, Mobile player) : base(1151727, 3) // cancel trade order
             {
@@ -293,7 +321,7 @@ namespace Server.Engines.CityLoyalty
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int v = reader.ReadInt();
+            reader.ReadInt();
 
             Owner = reader.ReadMobile();
             Expires = reader.ReadDateTime();
@@ -304,8 +332,8 @@ namespace Server.Engines.CityLoyalty
 
     public class CancelTradeOrderGump : Gump
     {
-        public TradeOrderCrate Crate { get; private set; }
-        public Mobile Player { get; private set; }
+        public TradeOrderCrate Crate { get; }
+        public Mobile Player { get; }
 
         public CancelTradeOrderGump(TradeOrderCrate crate, Mobile player)
             : base(100, 100)

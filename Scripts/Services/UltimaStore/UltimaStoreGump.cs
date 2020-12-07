@@ -70,12 +70,15 @@ namespace Server.Engines.UOStore
 
         public bool Search { get; private set; }
 
-        public UltimaStoreGump(PlayerMobile pm)
+        public UltimaStoreGump(PlayerMobile pm, StoreEntry forcedEntry = null)
             : base(pm, 100, 200)
         {
-            StoreList = UltimaStore.GetList(Category);
+            StoreList = UltimaStore.GetList(Category, forcedEntry);
 
-            UltimaStore.SortList(StoreList, SortBy);
+            if (forcedEntry == null)
+            {
+                UltimaStore.SortList(StoreList, SortBy);
+            }
 
             pm.Frozen = true;
             pm.Hidden = true;
@@ -167,7 +170,7 @@ namespace Server.Engines.UOStore
             AddECHandleInput();
 
             AddButton(598, 36, Category == StoreCategory.Cart ? 0x9C5E : 0x9C54, 0x9C5E, 113, GumpButtonType.Reply, 0);
-            AddHtmlLocalized(628, 39, 123, 25, 1156593, String.Format("@{0}@{1}", UltimaStore.CartCount(User), Configuration.CartCapacity), 0x7FFF, false, false);
+            AddHtmlLocalized(628, 39, 123, 25, 1156593, string.Format("@{0}@{1}", UltimaStore.CartCount(User), Configuration.CartCapacity), 0x7FFF, false, false);
 
             AddECHandleInput();
 
@@ -281,7 +284,7 @@ namespace Server.Engines.UOStore
                     for (int j = 0; j < entry.Name.Length; j++)
                     {
                         if (entry.Name[j].Number > 0)
-                            AddHtmlLocalized(x, y + (j * 14) + 4, 183, 25, 1114513, String.Format("#{0}", entry.Name[j].Number.ToString()), 0x7FFF, false, false);
+                            AddHtmlLocalized(x, y + (j * 14) + 4, 183, 25, 1114513, string.Format("#{0}", entry.Name[j].Number.ToString()), 0x7FFF, false, false);
                         else
                             AddHtml(x, y + (j * 14) + 4, 183, 25, ColorAndCenter("#FFFFFF", entry.Name[j].String), false, false);
                     }
@@ -406,7 +409,7 @@ namespace Server.Engines.UOStore
                 // FAQ
                 case 107:
                     {
-                        if (!String.IsNullOrWhiteSpace(Configuration.Website))
+                        if (!string.IsNullOrWhiteSpace(Configuration.Website))
                         {
                             User.LaunchBrowser(Configuration.Website);
                         }
@@ -466,7 +469,7 @@ namespace Server.Engines.UOStore
                     {
                         TextRelay searchTxt = info.GetTextEntry(0);
 
-                        if (searchTxt != null && !String.IsNullOrEmpty(searchTxt.Text))
+                        if (searchTxt != null && !string.IsNullOrEmpty(searchTxt.Text))
                         {
                             Search = true;
                             SearchText = searchTxt.Text;
@@ -592,7 +595,7 @@ namespace Server.Engines.UOStore
             {
                 if (Entry.Name[i].Number > 0)
                 {
-                    AddHtmlLocalized(10, 60 + (i * 14), 400, 20, 1114513, String.Format("#{0}", Entry.Name[i].Number), 0x6B45, false, false);
+                    AddHtmlLocalized(10, 60 + (i * 14), 400, 20, 1114513, string.Format("#{0}", Entry.Name[i].Number), 0x6B45, false, false);
                 }
                 else
                 {
@@ -633,7 +636,7 @@ namespace Server.Engines.UOStore
             {
                 TextRelay amtText = info.GetTextEntry(0);
 
-                if (amtText != null && !String.IsNullOrWhiteSpace(amtText.Text))
+                if (amtText != null && !string.IsNullOrWhiteSpace(amtText.Text))
                 {
                     int amount = Utility.ToInt32(amtText.Text);
 
@@ -727,7 +730,7 @@ namespace Server.Engines.UOStore
             AddBackground(0, 0, 410, 200, 0x9C40);
             AddHtmlLocalized(10, 10, 400, 20, 1114513, "#1156747", 0x7FFF, false, false); // Insufficient Funds
 
-            AddHtml(30, 60, 350, 60, Color("#da0000", String.Format("This transaction cannot be completed due to insufficient funds available. Visit your shards website for more information on how to obtain {0}.", Configuration.CurrencyName)), false, false);
+            AddHtml(30, 60, 350, 60, Color("#da0000", string.Format("This transaction cannot be completed due to insufficient funds available. Visit your shards website for more information on how to obtain {0}.", Configuration.CurrencyName)), false, false);
 
             AddECHandleInput();
 
@@ -755,7 +758,7 @@ namespace Server.Engines.UOStore
         {
             if (info.ButtonID == 195)
             {
-                if (!String.IsNullOrEmpty(Configuration.Website))
+                if (!string.IsNullOrEmpty(Configuration.Website))
                 {
                     User.LaunchBrowser(Configuration.Website);
                 }
@@ -821,10 +824,80 @@ namespace Server.Engines.UOStore
             {
                 TextRelay text = info.GetTextEntry(1);
 
-                if (text != null && !String.IsNullOrEmpty(text.Text))
+                if (text != null && !string.IsNullOrEmpty(text.Text))
                 {
                     // execute code here
                 }
+            }
+        }
+    }
+
+    public class PromoItemGump : BaseGump
+    {
+        public int Image { get; private set; }
+        public StoreEntry Entry { get; private set; }
+
+        public PromoItemGump(PlayerMobile pm, StoreEntry entry, int image)
+            : base(pm, 150, 200)
+        {
+            Image = image;
+            Entry = entry;
+        }
+
+        public override void AddGumpLayout()
+        {
+            AddImage(0, 0, 0x9CE1);
+
+            AddECHandleInput();
+
+            AddButton(76, 88, 0x9C4B, 0x9C4B, 1198, GumpButtonType.Reply, 0);
+
+            if (Entry.Tooltip > 0)
+            {
+                AddTooltip(Entry.Tooltip);
+            }
+            else
+            {
+                Item item = UltimaStore.UltimaStoreContainer.FindDisplayItem(Entry.ItemType);
+
+                if (item != null)
+                {
+                    AddItemProperty(item);
+                }
+            }
+
+            for (int j = 0; j < Entry.Name.Length; j++)
+            {
+                if (Entry.Name[j].Number > 0)
+                {
+                    AddHtmlLocalized(76, 92 + (j * 14) + 4, 183, 25, 1114513, string.Format("#{0}", Entry.Name[j].Number.ToString()), 0x7FFF, false, false);
+                }
+                else
+                {
+                    AddHtml(76, 92 + (j * 14) + 4, 183, 25, ColorAndCenter("#FFFFFF", Entry.Name[j].String), false, false);
+                }
+            }
+
+            AddImage(94, 126, Image);
+            AddImage(136, 280, 0x9C56);
+
+            AddLabelCropped(156, 278, 143, 25, 0x9C2, Entry.Cost.ToString());
+
+            AddECHandleInput();
+        }
+
+        public override void OnResponse(RelayInfo info)
+        {
+            if (info.ButtonID == 1198)
+            {
+                PlayerProfile profile = UltimaStore.GetProfile(User, false);
+
+                if (profile != null)
+                {
+                    profile.Category = StoreCategory.None;
+                }
+
+                UltimaStore.OpenStore(User, Entry);
             }
         }
     }

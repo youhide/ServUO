@@ -31,8 +31,6 @@ namespace Server.Items
 
         public virtual void Fill()
         {
-            Reset();
-
             List<Item> contains = new List<Item>(Items);
 
             foreach (Item i in contains)
@@ -56,12 +54,13 @@ namespace Server.Items
                     case 0:
                         item = new Bandage(Utility.Random(10, 30)); break;
                     case 1:
-                        item = new SmokeBomb();
-                        item.Amount = Utility.Random(3, 6);
+                        item = new SmokeBomb(Utility.Random(3, 6));
                         break;
                     case 2:
-                        item = new InvisibilityPotion();
-                        item.Amount = Utility.Random(1, 3);
+                        item = new InvisibilityPotion
+                        {
+                            Amount = Utility.Random(1, 3)
+                        };
                         break;
                     case 3:
                         item = new Lockpick(Utility.Random(1, 10)); break;
@@ -128,21 +127,6 @@ namespace Server.Items
 
                 DropItem(item);
             }
-        }
-
-        public void Reset()
-        {
-            EndTimer();
-
-            Visible = false;
-            Locked = true;
-
-            RequiredSkill = 90;
-            LockLevel = RequiredSkill - Utility.Random(1, 10);
-            MaxLockLevel = RequiredSkill;
-
-            TrapType = TrapType.MagicTrap;
-            TrapPower = 100;
         }
 
         public virtual bool CheckReveal(Mobile m)

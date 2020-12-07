@@ -6,7 +6,7 @@ using System;
 
 namespace Server.Items
 {
-    [FlipableAttribute(0xE81, 0xE82)]
+    [Flipable(0xE81, 0xE82)]
     public class ShepherdsCrook : BaseStaff
     {
         [Constructable]
@@ -30,8 +30,6 @@ namespace Server.Items
 
         public override int InitMinHits => 31;
         public override int InitMaxHits => 50;
-
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

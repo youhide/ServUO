@@ -7,7 +7,7 @@ namespace Server.Mobiles
 {
     public class Raider : BaseCreature
     {
-        public DateTime DeleteTime { get; set; }
+        public DateTime TimeToDelete { get; set; }
 
         public override bool Commandable => false;
         public override bool ReduceSpeedWithDamage => false;
@@ -93,11 +93,11 @@ namespace Server.Mobiles
             else if (Hits > ((double)HitsMax / 10))
             {
                 m.SendLocalizedMessage(1152229); // That person won't sit still for it! A more aggressive approach is in order.
-                m.NonlocalOverheadMessage(MessageType.Regular, 0x3B2, 1152237, String.Format("{0}\t{1}", m.Name, Name, "raider"));
+                m.NonlocalOverheadMessage(MessageType.Regular, 0x3B2, 1152237, string.Format("{0}\t{1}", m.Name, Name, "raider"));
             }
             else
             {
-                DeleteTime = DateTime.UtcNow + TimeSpan.FromHours(1);
+                TimeToDelete = DateTime.UtcNow + TimeSpan.FromHours(1);
 
                 SetControlMaster(m);
                 IsBonded = false;
@@ -105,7 +105,7 @@ namespace Server.Mobiles
                 ControlOrder = OrderType.Follow;
 
                 m.SendLocalizedMessage(1152236, Name); // You arrest the ~1_name~. Take the criminal to the guard captain.
-                m.NonlocalOverheadMessage(MessageType.Regular, 0x3B2, 1152238, String.Format("{0}\t{1}", m.Name, Name));
+                m.NonlocalOverheadMessage(MessageType.Regular, 0x3B2, 1152238, string.Format("{0}\t{1}", m.Name, Name));
 
                 return true;
             }
@@ -122,7 +122,7 @@ namespace Server.Mobiles
 
         public void CheckDelete()
         {
-            if (DeleteTime != DateTime.MinValue && DateTime.UtcNow > DeleteTime)
+            if (TimeToDelete != DateTime.MinValue && DateTime.UtcNow > TimeToDelete)
             {
                 if (ControlMaster != null && ControlMaster.NetState != null)
                 {
@@ -152,7 +152,7 @@ namespace Server.Mobiles
 
             Timer.DelayCall(TimeSpan.FromSeconds(10), CheckDelete);
 
-            writer.Write(DeleteTime);
+            writer.Write(TimeToDelete);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -160,7 +160,7 @@ namespace Server.Mobiles
             base.Deserialize(reader);
             int version = reader.ReadInt();
 
-            DeleteTime = reader.ReadDateTime();
+            TimeToDelete = reader.ReadDateTime();
         }
     }
 }

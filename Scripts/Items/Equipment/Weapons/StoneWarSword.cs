@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x900, 0x4071)]
+    [Flipable(0x900, 0x4071)]
     public class StoneWarSword : BaseSword
     {
         [Constructable]
@@ -25,9 +25,6 @@ namespace Server.Items
         public override int DefMissSound => 0x23A;
         public override int InitMinHits => 31;
         public override int InitMaxHits => 100;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

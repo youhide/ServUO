@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x90B, 0x4074)]
+    [Flipable(0x90B, 0x4074)]
     public class DreadSword : BaseSword
     {
         [Constructable]
@@ -26,9 +26,6 @@ namespace Server.Items
         public override int DefMissSound => 0x23A;
         public override int InitMinHits => 31;
         public override int InitMaxHits => 110;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

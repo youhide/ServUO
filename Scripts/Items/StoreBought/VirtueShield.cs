@@ -1,16 +1,13 @@
 namespace Server.Items
 {
-    public class VirtueShield : BaseShield, Server.Engines.Craft.IRepairable
+    public class VirtueShield : BaseShield, Engines.Craft.IRepairable
     {
-        public Server.Engines.Craft.CraftSystem RepairSystem => Server.Engines.Craft.DefBlacksmithy.CraftSystem;
+        public Engines.Craft.CraftSystem RepairSystem => Engines.Craft.DefBlacksmithy.CraftSystem;
         public override int BasePhysicalResistance => 8;
         public override int BaseFireResistance => 8;
         public override int BaseColdResistance => 8;
         public override int BasePoisonResistance => 8;
         public override int BaseEnergyResistance => 8;
-
-        public override bool CanBeWornByGargoyles => true;
-        public override int LabelNumber => 1109616;  // Virtue Shield
 
         public override int InitMinHits => 255;
         public override int InitMaxHits => 255;

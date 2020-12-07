@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x2B69, 0x3160)]
+    [Flipable(0x2B69, 0x3160)]
     public class WoodlandGorget : BaseArmor
     {
         [Constructable]
@@ -23,7 +23,6 @@ namespace Server.Items
         public override int InitMaxHits => 65;
         public override int StrReq => 45;
         public override ArmorMaterialType MaterialType => ArmorMaterialType.Wood;
-        public override Race RequiredRace => Race.Elf;
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);

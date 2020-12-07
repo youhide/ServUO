@@ -866,9 +866,6 @@ namespace Server.Items
 
     public class RewardGargishRobe : BaseOuterTorso, IRewardItem
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         private int m_LabelNumber;
         private bool m_IsRewardItem;
 
@@ -978,9 +975,6 @@ namespace Server.Items
 
     public class RewardGargishFancyRobe : BaseOuterTorso, IRewardItem
     {
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         private int m_LabelNumber;
         private bool m_IsRewardItem;
 
@@ -1172,8 +1166,6 @@ namespace Server.Items
             : base(serial)
         {
         }
-
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {
@@ -1456,8 +1448,6 @@ namespace Server.Items
     [Flipable(0x2FB9, 0x3173)]
     public class MaleElvenRobe : BaseOuterTorso
     {
-        public override Race RequiredRace => Race.Elf;
-
         [Constructable]
         public MaleElvenRobe()
             : this(0)
@@ -1494,7 +1484,6 @@ namespace Server.Items
     [Flipable(0x2FBA, 0x3174)]
     public class FemaleElvenRobe : BaseOuterTorso
     {
-        public override Race RequiredRace => Race.Elf;
         [Constructable]
         public FemaleElvenRobe()
             : this(0)
@@ -1637,9 +1626,6 @@ namespace Server.Items
     {
         public override int LabelNumber => 1123326;  // Gargish Epaulette
 
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
-
         [Constructable]
         public GargishEpaulette()
             : this(0)
@@ -1670,9 +1656,6 @@ namespace Server.Items
             base.Deserialize(reader);
 
             int version = reader.ReadInt();
-
-            if (Layer != Layer.OuterTorso)
-                Layer = Layer.OuterTorso;
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x2B6F, 0x3166)]
+    [Flipable(0x2B6F, 0x3166)]
     public class RoyalCirclet : BaseArmor
     {
         [Constructable]
@@ -15,7 +15,6 @@ namespace Server.Items
         {
         }
 
-        public override Race RequiredRace => Race.Elf;
         public override int BasePhysicalResistance => 1;
         public override int BaseFireResistance => 5;
         public override int BaseColdResistance => 2;

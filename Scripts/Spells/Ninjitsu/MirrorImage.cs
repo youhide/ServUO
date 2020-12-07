@@ -1,6 +1,5 @@
 using Server.Items;
 using Server.Mobiles;
-using Server.Spells;
 using Server.Spells.Necromancy;
 using Server.Spells.Ninjitsu;
 using System;
@@ -132,7 +131,11 @@ namespace Server.Spells.Ninjitsu
 
                     if (clone != null && clone.Summoned && clone.SummonMaster == defender)
                     {
-                        attacker.SendLocalizedMessage(1063141); // Your attack has been diverted to a nearby mirror image of your target!
+                        if (attacker != null)
+                        {
+                            attacker.SendLocalizedMessage(1063141); // Your attack has been diverted to a nearby mirror image of your target!
+                        }
+
                         defender.SendLocalizedMessage(1063140); // You manage to divert the attack onto one of your nearby mirror images.
                         break;
                     }
@@ -150,6 +153,8 @@ namespace Server.Mobiles
 {
     public class Clone : BaseCreature
     {
+        public override bool AlwaysAttackable => m_Caster is Travesty;
+
         private Mobile m_Caster;
         public Clone(Mobile caster)
             : base(AIType.AI_Melee, FightMode.None, 10, 1, 0.2, 0.4)
@@ -194,8 +199,8 @@ namespace Server.Mobiles
 
             TimeSpan duration = TimeSpan.FromSeconds(30 + caster.Skills.Ninjitsu.Fixed / 40);
 
-            new UnsummonTimer(caster, this, duration).Start();
             SummonEnd = DateTime.UtcNow + duration;
+            TimerRegistry.Register<BaseCreature>("UnsummonTimer", this, duration, c => c.Delete());
 
             MirrorImage.AddClone(m_Caster);
 
@@ -264,9 +269,11 @@ namespace Server.Mobiles
 
         private Item CloneItem(Item item)
         {
-            Item newItem = new Item(item.ItemID);
-            newItem.Hue = item.Hue;
-            newItem.Layer = item.Layer;
+            Item newItem = new Item(item.ItemID)
+            {
+                Hue = item.Hue,
+                Layer = item.Layer
+            };
 
             return newItem;
         }

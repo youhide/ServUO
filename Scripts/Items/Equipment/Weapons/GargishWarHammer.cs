@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48C0, 0x481)]
+    [Flipable(0x48C0, 0x481)]
     public class GargishWarHammer : BaseBashing
     {
         [Constructable]
@@ -26,9 +26,6 @@ namespace Server.Items
         public override int InitMinHits => 31;
         public override int InitMaxHits => 110;
         public override WeaponAnimation DefAnimation => WeaponAnimation.Bash2H;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

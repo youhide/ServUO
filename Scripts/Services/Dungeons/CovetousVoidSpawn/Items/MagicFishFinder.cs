@@ -119,7 +119,7 @@ namespace Server.Items
 
         public string GetDirectionString(Direction d)
         {
-            return String.Format("#{0}", 1152639 + (int)d);
+            return string.Format("#{0}", 1152639 + (int)d);
         }
 
         public static bool HasSchool(Mobile m)
@@ -127,9 +127,7 @@ namespace Server.Items
             if (m == null || !m.Alive || m.Backpack == null)
                 return false;
 
-            MagicalFishFinder finder = m.Backpack.FindItemByType<MagicalFishFinder>();
-
-            if (finder != null && Schools.ContainsKey(m.Map))
+            if (m.Backpack.FindItemByType<MagicalFishFinder>() != null && Schools.ContainsKey(m.Map))
             {
                 SchoolEntry entry = Schools[m.Map].FirstOrDefault(e => m.InRange(e.Location, SchoolRange));
 
@@ -272,7 +270,7 @@ namespace Server.Items
 
             public void Expire()
             {
-                MagicalFishFinder.ExpireSchool(Map, this);
+                ExpireSchool(Map, this);
             }
         }
     }

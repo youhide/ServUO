@@ -349,7 +349,7 @@ namespace Server.Gumps
                         if (bonusStorage > 0)
                         {
                             AddHtmlLocalized(10, 150, 300, 20, 1072519, LabelColor, false, false); // Increased Storage
-                            AddLabel(310, 150, LabelHue, String.Format("{0}%", bonusStorage));
+                            AddLabel(310, 150, LabelHue, string.Format("{0}%", bonusStorage));
                         }
 
                         AddHtmlLocalized(10, 170, 300, 20, 1060683, LabelColor, false, false); // Maximum Secure Storage
@@ -361,43 +361,23 @@ namespace Server.Gumps
                         AddHtmlLocalized(10, 210, 300, 20, 1060686, LabelColor, false, false); // Used by Lockdowns
                         AddLabel(310, 210, LabelHue, fromLockdowns.ToString());
 
-                        if (BaseHouse.NewVendorSystem)
-                        {
-                            AddHtmlLocalized(10, 230, 300, 20, 1060688, LabelColor, false, false); // Used by Secure Containers
-                            AddLabel(310, 230, LabelHue, fromSecures.ToString());
+                        AddHtmlLocalized(10, 230, 300, 20, 1060688, LabelColor, false, false); // Used by Secure Containers
+                        AddLabel(310, 230, LabelHue, fromSecures.ToString());
 
-                            AddHtmlLocalized(10, 250, 300, 20, 1060689, LabelColor, false, false); // Available Storage
-                            AddLabel(310, 250, LabelHue, Math.Max(maxSecures - curSecures, 0).ToString());
+                        AddHtmlLocalized(10, 250, 300, 20, 1060689, LabelColor, false, false); // Available Storage
+                        AddLabel(310, 250, LabelHue, Math.Max(maxSecures - curSecures, 0).ToString());
 
-                            AddHtmlLocalized(10, 290, 300, 20, 1060690, LabelColor, false, false); // Maximum Lockdowns
-                            AddLabel(310, 290, LabelHue, maxLockdowns.ToString());
+                        AddHtmlLocalized(10, 290, 300, 20, 1060690, LabelColor, false, false); // Maximum Lockdowns
+                        AddLabel(310, 290, LabelHue, maxLockdowns.ToString());
 
-                            AddHtmlLocalized(10, 310, 300, 20, 1060691, LabelColor, false, false); // Available Lockdowns
-                            AddLabel(310, 310, LabelHue, Math.Max(maxLockdowns - curLockdowns, 0).ToString());
+                        AddHtmlLocalized(10, 310, 300, 20, 1060691, LabelColor, false, false); // Available Lockdowns
+                        AddLabel(310, 310, LabelHue, Math.Max(maxLockdowns - curLockdowns, 0).ToString());
 
-                            int maxVendors = house.GetNewVendorSystemMaxVendors();
-                            int vendors = house.PlayerVendors.Count + house.VendorRentalContracts.Count;
+                        int maxVendors = house.GetVendorSystemMaxVendors();
+                        int vendors = house.PlayerVendors.Count + house.VendorRentalContracts.Count;
 
-                            AddHtmlLocalized(10, 350, 300, 20, 1062391, LabelColor, false, false); // Vendor Count
-                            AddLabel(310, 350, LabelHue, vendors.ToString() + " / " + maxVendors.ToString());
-                        }
-                        else
-                        {
-                            AddHtmlLocalized(10, 230, 300, 20, 1060687, LabelColor, false, false); // Used by Vendors
-                            AddLabel(310, 230, LabelHue, fromVendors.ToString());
-
-                            AddHtmlLocalized(10, 250, 300, 20, 1060688, LabelColor, false, false); // Used by Secure Containers
-                            AddLabel(310, 250, LabelHue, fromSecures.ToString());
-
-                            AddHtmlLocalized(10, 270, 300, 20, 1060689, LabelColor, false, false); // Available Storage
-                            AddLabel(310, 270, LabelHue, Math.Max(maxSecures - curSecures, 0).ToString());
-
-                            AddHtmlLocalized(10, 330, 300, 20, 1060690, LabelColor, false, false); // Maximum Lockdowns
-                            AddLabel(310, 330, LabelHue, maxLockdowns.ToString());
-
-                            AddHtmlLocalized(10, 350, 300, 20, 1060691, LabelColor, false, false); // Available Lockdowns
-                            AddLabel(310, 350, LabelHue, Math.Max(maxLockdowns - curLockdowns, 0).ToString());
-                        }
+                        AddHtmlLocalized(10, 350, 300, 20, 1062391, LabelColor, false, false); // Vendor Count
+                        AddLabel(310, 350, LabelHue, vendors.ToString() + " / " + maxVendors.ToString());
 
                         break;
                     }
@@ -817,11 +797,11 @@ namespace Server.Gumps
 
                 if ((house is BaseContestHouse && ((BaseContestHouse)house).HouseType == ContestHouseType.Keep) || house is Keep)
                 {
-                    entries = HousePlacementEntry.HousesEJ.Where(e => e.MultiID != house.ItemID && (e.MultiID == 0x007C || e.MultiID == 0x147E || e.MultiID >= 0x1484)).ToArray();
+                    entries = HousePlacementEntry.PreBuiltHouses.Where(e => e.MultiID != house.ItemID && (e.MultiID == 0x007C || e.MultiID == 0x147E || e.MultiID >= 0x1484)).ToArray();
                 }
                 else if ((house is BaseContestHouse && ((BaseContestHouse)house).HouseType == ContestHouseType.Castle) || house is Castle)
                 {
-                    entries = HousePlacementEntry.HousesEJ.Where(e => e.MultiID != house.ItemID && (e.MultiID == 0x007E || (e.MultiID >= 0x147F && e.MultiID <= 0x1483))).ToArray();
+                    entries = HousePlacementEntry.PreBuiltHouses.Where(e => e.MultiID != house.ItemID && (e.MultiID == 0x007E || (e.MultiID >= 0x147F && e.MultiID <= 0x1483))).ToArray();
                 }
 
                 if (entries != null)
@@ -1083,8 +1063,6 @@ namespace Server.Gumps
 
                                         m_House.Public = false;
 
-                                        m_House.ChangeLocks(from);
-
                                         // This house is now private.
                                         from.SendGump(new NoticeGump(1060637, 30720, 501888, 32512, 320, 180, PublicPrivateNotice_Callback, m_House));
 
@@ -1108,18 +1086,8 @@ namespace Server.Gumps
                                     {
                                         m_House.Public = true;
 
-                                        m_House.RemoveKeys(from);
-                                        m_House.RemoveLocks();
-
-                                        if (BaseHouse.NewVendorSystem)
-                                        {
-                                            // This house is now public. The owner may now place vendors and vendor rental contracts.
-                                            from.SendGump(new NoticeGump(1060637, 30720, 501886, 32512, 320, 180, PublicPrivateNotice_Callback, m_House));
-                                        }
-                                        else
-                                        {
-                                            from.SendGump(new NoticeGump(1060637, 30720, "This house is now public. Friends of the house may now have vendors working out of this building.", 0xF8C000, 320, 180, PublicPrivateNotice_Callback, m_House));
-                                        }
+                                        // This house is now public. The owner may now place vendors and vendor rental contracts.
+                                        from.SendGump(new NoticeGump(1060637, 30720, 501886, 32512, 320, 180, PublicPrivateNotice_Callback, m_House));
 
                                         Region r = m_House.Region;
                                         List<Mobile> list = r.GetMobiles();
@@ -1265,7 +1233,7 @@ namespace Server.Gumps
                                     if (isCoOwner)
                                     {
                                         from.Prompt = new RenamePrompt(m_House);
-                                        from.SendLocalizedMessage(501302); // What dost thou wish the sign to say?
+                                        //What dost thou wish the sign to say? message handled below in the Rename Prompt.
                                     }
 
                                     break;
@@ -1326,7 +1294,7 @@ namespace Server.Gumps
                                 {
                                     if (isOwner)
                                     {
-                                        if (BaseHouse.NewVendorSystem && m_House.HasPersonalVendors)
+                                        if (m_House.HasPersonalVendors)
                                         {
                                             from.SendLocalizedMessage(1062467); // You cannot trade this house while you still have personal vendors inside.
                                         }
@@ -1608,7 +1576,7 @@ namespace Server.Prompts
 {
     public class RenamePrompt : Prompt
     {
-        public override int MessageCliloc => 501302;
+        public override int MessageCliloc => 501302; // What dost thou wish the sign to say?
         private readonly BaseHouse m_House;
         public RenamePrompt(BaseHouse house)
         {

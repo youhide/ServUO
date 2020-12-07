@@ -1,6 +1,7 @@
 using Server.Commands;
 using Server.HuePickers;
 using Server.Network;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -29,7 +30,6 @@ namespace Server.Gumps
         public static readonly int TextOffsetX = PropsConfig.TextOffsetX;
 
         public static readonly int OffsetGumpID = PropsConfig.OffsetGumpID;
-        public static readonly int HeaderGumpID = PropsConfig.HeaderGumpID;
         public static readonly int EntryGumpID = PropsConfig.EntryGumpID;
         public static readonly int BackGumpID = PropsConfig.BackGumpID;
         public static readonly int SetGumpID = PropsConfig.SetGumpID;
@@ -38,16 +38,6 @@ namespace Server.Gumps
         public static readonly int SetOffsetX = PropsConfig.SetOffsetX, SetOffsetY = PropsConfig.SetOffsetY;
         public static readonly int SetButtonID1 = PropsConfig.SetButtonID1;
         public static readonly int SetButtonID2 = PropsConfig.SetButtonID2;
-
-        public static readonly int PrevWidth = PropsConfig.PrevWidth;
-        public static readonly int PrevOffsetX = PropsConfig.PrevOffsetX, PrevOffsetY = PropsConfig.PrevOffsetY;
-        public static readonly int PrevButtonID1 = PropsConfig.PrevButtonID1;
-        public static readonly int PrevButtonID2 = PropsConfig.PrevButtonID2;
-
-        public static readonly int NextWidth = PropsConfig.NextWidth;
-        public static readonly int NextOffsetX = PropsConfig.NextOffsetX, NextOffsetY = PropsConfig.NextOffsetY;
-        public static readonly int NextButtonID1 = PropsConfig.NextButtonID1;
-        public static readonly int NextButtonID2 = PropsConfig.NextButtonID2;
 
         public static readonly int OffsetSize = PropsConfig.OffsetSize;
 
@@ -86,12 +76,8 @@ namespace Server.Gumps
             }
 
             object val = prop.GetValue(m_Object, null);
-            string initialText;
 
-            if (val == null)
-                initialText = "";
-            else
-                initialText = val.ToString();
+            var initialText = val == null ? "" : val.ToString();
 
             AddPage(0);
 
@@ -191,6 +177,11 @@ namespace Server.Gumps
                 m_Stack = stack;
                 m_Page = page;
                 m_List = list;
+            }
+
+            public override void Clip(ref int hue)
+            {
+                hue = Math.Max(0, Math.Min(3000, hue));
             }
 
             public override void OnResponse(int hue)

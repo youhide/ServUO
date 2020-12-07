@@ -2,7 +2,6 @@ using Server.ContextMenus;
 using Server.Gumps;
 using Server.Multis;
 using Server.Network;
-using System;
 using System.Collections.Generic;
 
 namespace Server.Items
@@ -35,9 +34,11 @@ namespace Server.Items
                 m_Level = value;
             }
         }
+
         public override bool DisplaysContent => false;// Do not display (x items, y stones)
+
         public override bool IsDecoContainer => false;
-        public override TimeSpan DecayTime => TimeSpan.FromDays(1.0);
+
         public static bool ValidateDefault(Mobile from, BaseBoard board)
         {
             if (from.AccessLevel >= AccessLevel.GameMaster)
@@ -94,11 +95,8 @@ namespace Server.Items
             base.Deserialize(reader);
             int version = reader.ReadInt();
 
-            if (version == 1)
-                m_Level = (SecureLevel)reader.ReadInt();
+            m_Level = (SecureLevel)reader.ReadInt();
 
-            if (Weight == 1.0)
-                Weight = 5.0;
         }
 
         public override bool OnDragDrop(Mobile from, Item dropped)

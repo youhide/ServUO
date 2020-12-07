@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x422A, 0x422C)]
+    [Flipable(0x422A, 0x422C)]
     public class GargishOrderShield : BaseShield
     {
         [Constructable]
@@ -23,8 +23,7 @@ namespace Server.Items
         public override int InitMinHits => 100;
         public override int InitMaxHits => 125;
         public override int StrReq => 95;
-        public override bool CanBeWornByGargoyles => true;
-        public override Race RequiredRace => Race.Gargoyle;
+
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);

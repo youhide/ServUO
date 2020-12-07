@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x42DE, 0x42DF)]
+    [Flipable(0x42DE, 0x42DF)]
     public class PlateTalons : BaseShoes
     {
         [Constructable]
@@ -21,8 +21,6 @@ namespace Server.Items
         {
         }
 
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
         public override CraftResource DefaultResource => CraftResource.Iron;
         public override void Serialize(GenericWriter writer)
         {

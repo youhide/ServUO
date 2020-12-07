@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x902, 0x406A)]
+    [Flipable(0x902, 0x406A)]
     public class GargishDagger : BaseKnife
     {
         [Constructable]
@@ -26,9 +26,6 @@ namespace Server.Items
         public override SkillName DefSkill => SkillName.Fencing;
         public override WeaponType DefType => WeaponType.Piercing;
         public override WeaponAnimation DefAnimation => WeaponAnimation.Pierce1H;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

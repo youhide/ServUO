@@ -2,7 +2,7 @@ using Server.Engines.Harvest;
 
 namespace Server.Items
 {
-    [FlipableAttribute(0x48C4, 0x48C5)]
+    [Flipable(0x48C4, 0x48C5)]
     public class GargishScythe : BasePoleArm
     {
         [Constructable]
@@ -27,9 +27,6 @@ namespace Server.Items
         public override int InitMinHits => 31;
         public override int InitMaxHits => 100;
         public override HarvestSystem HarvestSystem => null;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

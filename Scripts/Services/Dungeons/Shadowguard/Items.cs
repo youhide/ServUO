@@ -37,7 +37,7 @@ namespace Server.Engines.Shadowguard
                 else
                 {
                     m.SendLocalizedMessage(1010086); // What do you want to use this on?
-                    m.BeginTarget(10, false, Server.Targeting.TargetFlags.None, (from, targeted) =>
+                    m.BeginTarget(10, false, Targeting.TargetFlags.None, (from, targeted) =>
                     {
                         if (0.25 > Utility.RandomDouble() && m.BAC > 0)
                         {
@@ -120,22 +120,22 @@ namespace Server.Engines.Shadowguard
         Pride
     }
 
-    public class ShadowguardApple : BaseDecayingItem
+    public class ShadowguardApple : Apple
     {
         [CommandProperty(AccessLevel.GameMaster)]
-        public ShadowguardCypress Tree { get; set; }
+        public ShadowguardCypress Tree { get; private set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public OrchardEncounter Encounter { get; set; }
 
-        public bool _Thrown;
+        private bool _Thrown;
 
-        public override int Lifespan => 30;
-
-        public ShadowguardApple(OrchardEncounter encounter, ShadowguardCypress tree) : base(0x9D0)
+        public ShadowguardApple(OrchardEncounter encounter, ShadowguardCypress tree)
         {
             Encounter = encounter;
             Tree = tree;
+
+            AttachSocket(new DecayingItemSocket(30, true));
         }
 
         public override void AddNameProperty(ObjectPropertyList list)
@@ -149,7 +149,7 @@ namespace Server.Engines.Shadowguard
             if (IsChildOf(m.Backpack) && Tree != null)
             {
                 m.SendLocalizedMessage(1010086); // What do you want to use this on?
-                m.BeginTarget(10, false, Server.Targeting.TargetFlags.None, (from, targeted) =>
+                m.BeginTarget(10, false, Targeting.TargetFlags.None, (from, targeted) =>
                 {
                     _Thrown = true;
 
@@ -285,9 +285,7 @@ namespace Server.Engines.Shadowguard
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
-
-            writer.Write(Tree);
+            writer.Write(1);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -295,7 +293,10 @@ namespace Server.Engines.Shadowguard
             base.Deserialize(reader);
             int version = reader.ReadInt();
 
-            Tree = reader.ReadItem() as ShadowguardCypress;
+            if (version == 0)
+            {
+                reader.ReadItem();
+            }
         }
     }
 
@@ -462,12 +463,19 @@ namespace Server.Engines.Shadowguard
             set
             {
                 _Purified = value;
+
+                if (value)
+                {
+                    Hue = 0;
+                }
+
                 InvalidateProperties();
             }
         }
 
         [Constructable]
-        public Phylactery() : base(17076)
+        public Phylactery()
+            : base(0x4686)
         {
             Hue = 2075;
         }
@@ -477,7 +485,7 @@ namespace Server.Engines.Shadowguard
             if (IsChildOf(m.Backpack))
             {
                 m.SendLocalizedMessage(1010086); // What do you want to use this on?
-                m.BeginTarget(3, false, Server.Targeting.TargetFlags.None, (from, targeted) =>
+                m.BeginTarget(3, false, Targeting.TargetFlags.None, (from, targeted) =>
                 {
                     if (targeted is PurifyingFlames)
                     {
@@ -524,9 +532,11 @@ namespace Server.Engines.Shadowguard
 
                             Timer.DelayCall(TimeSpan.FromSeconds(1), () =>
                             {
-                                Item item = new Static(Utility.Random(8762, 16));
-                                item.Hue = 1111;
-                                item.Name = "Broken Armor";
+                                Item item = new Static(Utility.Random(8762, 16))
+                                {
+                                    Hue = 1111,
+                                    Name = "Broken Armor"
+                                };
                                 item.MoveToWorld(p, Map.TerMur);
 
                                 ArmoryEncounter encounter = ShadowguardController.GetEncounter(p, Map.TerMur) as ArmoryEncounter;
@@ -537,7 +547,7 @@ namespace Server.Engines.Shadowguard
                                 int ticks = 1;
                                 Timer.DelayCall(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(50), 2, () =>
                                 {
-                                    Server.Misc.Geometry.Circle2D(p, map, ticks, (pnt, mob) =>
+                                    Misc.Geometry.Circle2D(p, map, ticks, (pnt, mob) =>
                                     {
                                         Effects.PlaySound(pnt, mob, 0x307);
                                         Effects.SendLocationEffect(pnt, mob, Utility.RandomBool() ? 14000 : 14013, 20, 2018, 0);

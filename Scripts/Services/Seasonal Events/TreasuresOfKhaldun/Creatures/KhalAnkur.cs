@@ -86,7 +86,7 @@ namespace Server.Mobiles
 
         public override MonsterStatuetteType[] StatueTypes => new MonsterStatuetteType[] { };
 
-        public override void OnBeforeDamage(Mobile from, ref int totalDamage, Server.DamageType type)
+        public override void OnBeforeDamage(Mobile from, ref int totalDamage, DamageType type)
         {
             if (Region.IsPartOf("Khaldun") && IsChampionSpawn && !Caddellite.CheckDamage(from, type))
             {
@@ -253,7 +253,7 @@ namespace Server.Mobiles
 
             List<Point3D> points = new List<Point3D>();
 
-            Server.Misc.Geometry.Circle2D(loc, pmmap, 7, (pnt, map) =>
+            Misc.Geometry.Circle2D(loc, pmmap, 7, (pnt, map) =>
             {
                 if (map.CanFit(pnt, 0) && InLOS(pnt))
                     points.Add(pnt);
@@ -261,7 +261,7 @@ namespace Server.Mobiles
 
             if (pmmap != Map.Internal && pmmap != null)
             {
-                Server.Misc.Geometry.Circle2D(loc, pmmap, 6, (pnt, map) =>
+                Misc.Geometry.Circle2D(loc, pmmap, 6, (pnt, map) =>
                 {
                     if (map.CanFit(pnt, 0) && InLOS(pnt) && Utility.RandomBool())
                     {
@@ -270,7 +270,7 @@ namespace Server.Mobiles
                     }
                 });
 
-                Server.Misc.Geometry.Circle2D(loc, pmmap, 7, (pnt, map) =>
+                Misc.Geometry.Circle2D(loc, pmmap, 7, (pnt, map) =>
                 {
                     if (map.CanFit(pnt, 0) && InLOS(pnt) && Utility.RandomBool())
                     {
@@ -330,19 +330,33 @@ namespace Server.Mobiles
             AddLoot(LootPack.UltraRich, 3);
             AddLoot(LootPack.Meager);
         }
+        
+        private int _120GPowerScrolls = 4;
 
-        private int _120Scrolls = 4;
-
-        public override Item CreateRandomPowerScroll()
+        public override Item GetPowerScroll()
         {
-            if (_120Scrolls > 0)
+            if (_120GPowerScrolls > 0)
             {
-                _120Scrolls--;
+                _120GPowerScrolls--;
 
                 return PowerScroll.CreateRandomNoCraft(20, 20);
             }
 
-            return base.CreateRandomPowerScroll();
+            return base.GetPowerScroll();
+        }
+
+        private int _120GJPowerScrolls = 4;
+
+        public override Item GetJusticePowerScroll()
+        {
+            if (_120GJPowerScrolls > 0)
+            {
+                _120GJPowerScrolls--;
+
+                return PowerScroll.CreateRandomNoCraft(20, 20);
+            }
+
+            return base.GetJusticePowerScroll();
         }
 
         public override void Serialize(GenericWriter writer)

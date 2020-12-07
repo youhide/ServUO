@@ -126,9 +126,14 @@ namespace Server.Engines.Quests
             m_Rewards = new List<BaseReward>();
         }
 
+        public bool HasTimer()
+        {
+            return m_Objectives.Any(obj => obj.Timed);
+        }
+
         public void StartTimer()
         {
-            if (m_Timer != null)
+            if (m_Timer != null || !HasTimer())
                 return;
 
             m_Timer = Timer.DelayCall(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), Slice);
@@ -215,7 +220,7 @@ namespace Server.Engines.Quests
                 }
             }
 
-            // tick tack	
+            // tick tack
             StartTimer();
         }
 
@@ -293,7 +298,7 @@ namespace Server.Engines.Quests
                 }
                 catch (Exception e)
                 {
-                    Server.Diagnostics.ExceptionLogging.LogException(e);
+                    Diagnostics.ExceptionLogging.LogException(e);
                     reward = null;
                 }
 

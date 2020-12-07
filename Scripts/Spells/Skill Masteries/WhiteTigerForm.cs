@@ -26,6 +26,8 @@ namespace Server.Spells.SkillMasteries
         public override bool BlocksMovement => false;
         public override int CastRecoveryBase => (10);
 
+        public override bool RevealOnCast => false;
+
         public WhiteTigerFormSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -100,6 +102,8 @@ namespace Server.Spells.SkillMasteries
                     Caster.Mana -= mana;
 
                     BuffInfo.RemoveBuff(Caster, BuffIcon.WhiteTigerForm);
+
+                    FinishSequence();
                     return;
                 }
                 else
@@ -113,6 +117,7 @@ namespace Server.Spells.SkillMasteries
                         if (chance < Utility.RandomDouble())
                         {
                             DoFizzle();
+                            FinishSequence();
                             return;
                         }
                     }
@@ -142,7 +147,7 @@ namespace Server.Spells.SkillMasteries
                 Caster.CheckStatTimers();
 
                 int bleedMod = (int)(((Caster.Skills[SkillName.Ninjitsu].Value + Caster.Skills[SkillName.Stealth].Value + (GetMasteryLevel() * 40)) / 3) / 10);
-                BuffInfo.AddBuff(Caster, new BuffInfo(BuffIcon.WhiteTigerForm, 1155911, 1156060, String.Format("{0}\t{1}\t{2}\t{3}", "20", "5", "", bleedMod.ToString())));
+                BuffInfo.AddBuff(Caster, new BuffInfo(BuffIcon.WhiteTigerForm, 1155911, 1156060, string.Format("{0}\t{1}\t{2}\t{3}", "20", "5", "", bleedMod.ToString())));
                 // +~1_ARG~ Defense Chance Increase.<br>+~2_ARG~ Max Defense Chance Increase Cap.<br> Chance to evade attacks.<br>Applies bleed to victim with a max damage of ~4_ARG~.
 
                 Caster.Delta(MobileDelta.WeaponDamage);

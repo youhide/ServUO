@@ -1,7 +1,6 @@
 #region References
 using Server.ContextMenus;
 using Server.Engines.PartySystem;
-using Server.Engines.Points;
 using Server.Engines.Quests.Doom;
 using Server.Engines.VvV;
 using Server.Items;
@@ -108,7 +107,9 @@ namespace Server.Mobiles
         Ribs,
         Bird,
         LambLeg,
-        Rotworm
+        Rotworm,
+        DinoRibs,
+        SeaSerpentSteak
     }
 
     public enum HideType
@@ -345,6 +346,7 @@ namespace Server.Mobiles
             set
             {
                 m_IsStabled = value;
+
                 if (m_IsStabled)
                 {
                     StopDeleteTimer();
@@ -358,7 +360,7 @@ namespace Server.Mobiles
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsPrisoner { get; set; }
 
-        protected DateTime SummonEnd { get { return m_SummonEnd; } set { m_SummonEnd = value; } }
+        public DateTime SummonEnd { get { return m_SummonEnd; } set { m_SummonEnd = value; } }
 
         public virtual int DefaultHitsRegen
         {
@@ -418,7 +420,7 @@ namespace Server.Mobiles
         #region Bonding
         public const bool BondingEnabled = true;
 
-        public virtual bool IsBondable => (BondingEnabled && !Summoned && !m_Allured && !IsGolem);
+        public virtual bool IsBondable => (BondingEnabled && !Summoned && !m_Allured && !(this is IRepairableMobile));
         public virtual TimeSpan BondingDelay => TimeSpan.FromDays(7.0);
         public virtual TimeSpan BondingAbandonDelay => TimeSpan.FromDays(1.0);
 
@@ -426,12 +428,15 @@ namespace Server.Mobiles
         public override bool CanRegenStam => !IsParagon && !m_IsDeadPet && base.CanRegenStam;
         public override bool CanRegenMana => !m_IsDeadPet && base.CanRegenMana;
 
+        public override TimeSpan CorpseDecayTime { get { return IsChampionSpawn ? TimeSpan.FromMinutes(1) : base.CorpseDecayTime; } }
+
         public override bool IsDeadBondedPet => m_IsDeadPet;
 
         private bool m_IsBonded;
         private bool m_IsDeadPet;
         private DateTime m_BondingBegin;
         private DateTime m_OwnerAbandonTime;
+        private DateTime m_DeleteTime;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public Spawner MySpawner
@@ -462,8 +467,6 @@ namespace Server.Mobiles
             }
         }
 
-        public bool IsGolem => this is IRepairableMobile;
-
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsBonded
         {
@@ -482,58 +485,23 @@ namespace Server.Mobiles
 
         [CommandProperty(AccessLevel.GameMaster)]
         public DateTime OwnerAbandonTime { get { return m_OwnerAbandonTime; } set { m_OwnerAbandonTime = value; } }
-        #endregion
-
-        #region Delete Previously Tamed Timer
-        private DeleteTimer m_DeleteTimer;
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public TimeSpan DeleteTimeLeft
+        public DateTime DeleteTime
         {
-            get
+            get { return m_DeleteTime; }
+            set
             {
-                if (m_DeleteTimer != null && m_DeleteTimer.Running)
+                m_DeleteTime = value;
+
+                if (m_DeleteTime != DateTime.MinValue)
                 {
-                    return m_DeleteTimer.Next - DateTime.UtcNow;
+                    CreatureDeleteTimer.RegisterTimer(this);
                 }
-
-                return TimeSpan.Zero;
-            }
-        }
-
-        private class DeleteTimer : Timer
-        {
-            private readonly Mobile m;
-
-            public DeleteTimer(Mobile creature, TimeSpan delay)
-                : base(delay)
-            {
-                m = creature;
-                Priority = TimerPriority.OneMinute;
-            }
-
-            protected override void OnTick()
-            {
-                m.Delete();
-            }
-        }
-
-        public void BeginDeleteTimer()
-        {
-            if (!Summoned && !Deleted && !IsStabled)
-            {
-                StopDeleteTimer();
-                m_DeleteTimer = new DeleteTimer(this, TimeSpan.FromDays(3.0));
-                m_DeleteTimer.Start();
-            }
-        }
-
-        public void StopDeleteTimer()
-        {
-            if (m_DeleteTimer != null)
-            {
-                m_DeleteTimer.Stop();
-                m_DeleteTimer = null;
+                else
+                {
+                    CreatureDeleteTimer.RemoveFromTimer(this);
+                }
             }
         }
         #endregion
@@ -825,7 +793,7 @@ namespace Server.Mobiles
             }
         }
 
-        public static bool IsSoulboundEnemies => PointsSystem.FellowshipData.Enabled;
+        public static bool IsSoulboundEnemies => Engines.Fellowship.ForsakenFoesEvent.Instance.Running;
 
         public static Type[] _SoulboundCreatures =
         {
@@ -994,26 +962,31 @@ namespace Server.Mobiles
             }
             set
             {
-                Mobile initialFocus = InitialFocus;
+                if (Deleted)
+                    return;
 
-                if (base.Combatant == null)
+                var c = base.Combatant;
+
+                if (c == value)
+                    return;
+
+                if (AttacksFocus)
                 {
-                    if (value is Mobile && AttacksFocus)
+                    Mobile focus = InitialFocus;
+
+                    if (c != null)
                     {
-                        InitialFocus = (Mobile)value;
+                        if (focus != null && focus != value && InRange(focus.Location, RangePerception) && CanSee(focus))
+                            value = focus;
+                    }
+                    else
+                    {
+                        if (focus == null && value is Mobile m)
+                            InitialFocus = m;
                     }
                 }
-                else if (AttacksFocus &&
-                        initialFocus != null &&
-                        value != initialFocus &&
-                        !initialFocus.Hidden &&
-                        Map == initialFocus.Map &&
-                        InRange(initialFocus.Location, RangePerception))
-                {
-                    //Keeps focus
-                    base.Combatant = initialFocus;
-                    return;
-                }
+                else
+                    InitialFocus = null;
 
                 base.Combatant = value;
 
@@ -1086,6 +1059,8 @@ namespace Server.Mobiles
             }
         }
 
+        public bool IsGolem => this is IRepairableMobile && GetMaster() != null;
+
         public virtual bool TaintedLifeAura => false;
         public virtual bool BreathImmune => false;
 
@@ -1095,20 +1070,20 @@ namespace Server.Mobiles
             SpillAcid(null, Amount);
         }
 
-        public void SpillAcid(Mobile target, int Amount)
+        public void SpillAcid(Mobile target, int amount)
         {
             if ((target != null && target.Map == null) || Map == null)
             {
                 return;
             }
 
-            for (int i = 0; i < Amount; ++i)
+            for (int i = 0; i < amount; ++i)
             {
                 Point3D loc = Location;
                 Map map = Map;
                 Item acid = NewHarmfulItem();
 
-                if (target != null && target.Map != null && Amount == 1)
+                if (target != null && target.Map != null && amount == 1)
                 {
                     loc = target.Location;
                     map = target.Map;
@@ -1116,13 +1091,20 @@ namespace Server.Mobiles
                 else
                 {
                     bool validLocation = false;
+
                     for (int j = 0; !validLocation && j < 10; ++j)
                     {
                         loc = new Point3D(loc.X + (Utility.Random(0, 3) - 2), loc.Y + (Utility.Random(0, 3) - 2), loc.Z);
-                        loc.Z = map.GetAverageZ(loc.X, loc.Y);
+
+                        if (!map.CanFit(loc, 16, false, false))
+                        {
+                            SpellHelper.AdjustField(ref loc, map, 16, true);
+                        }
+
                         validLocation = map.CanFit(loc, 16, false, false);
                     }
                 }
+
                 acid.MoveToWorld(loc, map);
             }
         }
@@ -1138,41 +1120,59 @@ namespace Server.Mobiles
         }
 
         #region Flee!!!
-        public virtual bool CanFlee => !m_Paragon && !GivesMLMinorArtifact;
+        public virtual bool CanFlee => !m_Paragon && !GivesMLMinorArtifact && !SlayerGroup.GetEntryByName(SlayerName.Silver).Slays(this);
+        public virtual double FleeChance => 0.25;
+        public virtual double BreakFleeChance => 0.85;
 
-        private DateTime m_EndFlee;
+        public long NextFleeCheck { get; set; }
+        public DateTime ForceFleeUntil { get; set; }
 
-        public DateTime EndFleeTime { get { return m_EndFlee; } set { m_EndFlee = value; } }
-
-        public virtual void StopFlee()
+        public bool CheckCanFlee()
         {
-            m_EndFlee = DateTime.MinValue;
+            if (ForceFleeUntil != DateTime.MinValue)
+            {
+                if (ForceFleeUntil < DateTime.UtcNow)
+                {
+                    ForceFleeUntil = DateTime.MinValue;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            if (!CanFlee || NextFleeCheck > Core.TickCount)
+            {
+                return false;
+            }
+
+            NextFleeCheck = Core.TickCount + 1000;
+
+            return CheckFlee() && FleeChance > Utility.RandomDouble();
+        }
+
+        public virtual bool CheckBreakFlee()
+        {
+            if ((ForceFleeUntil != DateTime.MinValue && ForceFleeUntil > DateTime.UtcNow) || Hits < HitsMax / 2)
+            {
+                return false;
+            }
+
+            bool caster = AI == AIType.AI_Mage || AI == AIType.AI_NecroMage || AI == AIType.AI_Spellbinder || AI == AIType.AI_Spellweaving || AI == AIType.AI_Mystic;
+
+            return !caster || Mana > 20 || Mana == ManaMax;
         }
 
         public virtual bool CheckFlee()
         {
-            if (HitsMax >= 500)
-            {
-                return false;
-            }
-
-            if (m_EndFlee == DateTime.MinValue)
-            {
-                return false;
-            }
-
-            if (DateTime.UtcNow >= m_EndFlee)
-            {
-                StopFlee();
-                return false;
-            }
-
-            return true;
+            return Hits <= (HitsMax * 16) / 100;
         }
 
-        public virtual void BeginFlee(TimeSpan maxDuration)
+        public virtual bool BreakFlee()
         {
-            m_EndFlee = DateTime.UtcNow + maxDuration;
+            NextFleeCheck = Core.TickCount + Utility.RandomMinMax(2500, 10000);
+
+            return true;
         }
         #endregion
 
@@ -1368,7 +1368,7 @@ namespace Server.Mobiles
                 }
                 else
                 {
-                    suffix = String.Concat(suffix, " (Paragon)");
+                    suffix = string.Concat(suffix, " (Paragon)");
                 }
             }
 
@@ -1452,6 +1452,18 @@ namespace Server.Mobiles
             chance -= (MaxLoyalty - m_Loyalty) * 10;
 
             return ((double)chance / 1000);
+        }
+
+        public static readonly TimeSpan DeleteTimeSpan = TimeSpan.FromDays(3);
+
+        public virtual void BeginDeleteTimer()
+        {
+            DeleteTime = DateTime.UtcNow + DeleteTimeSpan;
+        }
+
+        public virtual void StopDeleteTimer()
+        {
+            DeleteTime = DateTime.MinValue;
         }
 
         public virtual bool CanTransfer(Mobile m)
@@ -1971,6 +1983,8 @@ namespace Server.Mobiles
                         case MeatType.Bird: m = new RawBird(meat); break;
                         case MeatType.LambLeg: m = new RawLambLeg(meat); break;
                         case MeatType.Rotworm: m = new RawRotwormMeat(meat); break;
+                        case MeatType.DinoRibs: m = new RawDinoRibs(meat); break;
+                        case MeatType.SeaSerpentSteak: m = new RawSeaSerpentSteak(meat); break;
                     }
 
                     if (!special || !from.AddToBackpack(m))
@@ -2184,8 +2198,6 @@ namespace Server.Mobiles
             }
 
             InitializeAbilities();
-
-            Timer.DelayCall(() => GenerateLoot(LootStage.Spawning));
         }
 
         public BaseCreature(Serial serial)
@@ -2197,11 +2209,16 @@ namespace Server.Mobiles
             m_bDebugAI = false;
         }
 
+        protected override void OnCreate()
+        {
+            GenerateLoot(LootStage.Spawning);
+        }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
 
-            writer.Write(31); // version
+            writer.Write(32); // version
 
             writer.Write(StealPackGenerated);
             writer.Write(HasBeenStolen);
@@ -2331,11 +2348,11 @@ namespace Server.Mobiles
             // Version 17
             if (IsStabled || (Controlled && ControlMaster != null))
             {
-                writer.Write(TimeSpan.Zero);
+                writer.Write(DateTime.MinValue);
             }
             else
             {
-                writer.Write(DeleteTimeLeft);
+                writer.Write(m_DeleteTime);
             }
 
             // Version 18
@@ -2389,6 +2406,7 @@ namespace Server.Mobiles
 
             switch (version)
             {
+                case 32:
                 case 31:
                     StealPackGenerated = reader.ReadBool();
                     HasBeenStolen = reader.ReadBool();
@@ -2493,7 +2511,7 @@ namespace Server.Mobiles
                 if (m_bSummoned)
                 {
                     m_SummonEnd = reader.ReadDeltaTime();
-                    new UnsummonTimer(m_ControlMaster, this, m_SummonEnd - DateTime.UtcNow).Start();
+                    TimerRegistry.Register<BaseCreature>("UnsummonTimer", this, m_SummonEnd - DateTime.UtcNow, c => c.Delete()); 
                 }
 
                 m_iControlSlots = reader.ReadInt();
@@ -2617,22 +2635,21 @@ namespace Server.Mobiles
                 m_RemoveStep = reader.ReadInt();
             }
 
-            TimeSpan deleteTime = TimeSpan.Zero;
-
             if (version >= 17)
             {
-                deleteTime = reader.ReadTimeSpan();
-            }
-
-            if (deleteTime > TimeSpan.Zero || LastOwner != null && !Controlled && !IsStabled)
-            {
-                if (deleteTime == TimeSpan.Zero)
+                if (version < 32)
                 {
-                    deleteTime = TimeSpan.FromDays(3.0);
-                }
+                    var span = reader.ReadTimeSpan();
 
-                m_DeleteTimer = new DeleteTimer(this, deleteTime);
-                m_DeleteTimer.Start();
+                    if (span > TimeSpan.Zero)
+                    {
+                        DeleteTime = DateTime.UtcNow + span;
+                    }
+                }
+                else
+                {
+                    DeleteTime = reader.ReadDateTime();
+                }
             }
 
             if (version >= 18)
@@ -2740,6 +2757,9 @@ namespace Server.Mobiles
             {
                 AdjustTameRequirements();
             }
+
+            if (AI == AIType.AI_UNUSED1 || AI == AIType.AI_UNUSED2)
+                AI = AIType.AI_Melee; // Can be safely removed on 1/1/2021 - Dan
         }
 
         public virtual bool IsHumanInTown()
@@ -2892,7 +2912,7 @@ namespace Server.Mobiles
                 return false;
             }
 
-            return types.Any(t => t == fed.GetType());
+            return types.Any(t => t == fed.GetType() || fed.GetType().IsSubclassOf(t));
         }
 
         public virtual bool CheckFeed(Mobile from, Item dropped)
@@ -2970,10 +2990,6 @@ namespace Server.Mobiles
                         return true;
                     }
                 }
-                else
-                {
-                    PrivateOverheadMessage(MessageType.Regular, 0x3B2, 1043257, from.NetState); // The animal shies away.
-                }
             }
 
             return false;
@@ -3009,20 +3025,29 @@ namespace Server.Mobiles
 
         public override bool OnDragDrop(Mobile from, Item dropped)
         {
+            bool canDrop = false;
+
             if (CheckFeed(from, dropped))
             {
-                return true;
+                canDrop = true;
             }
-            if (CheckGold(from, dropped))
+            
+            if (!canDrop && CheckGold(from, dropped))
+            {
+                canDrop = true;
+            }
+            
+            if (!canDrop && !from.InRange(Location, 2) && base.OnDragDrop(from, dropped))
             {
                 return true;
-            }
-            if (!from.InRange(Location, 2))
-            {
-                return base.OnDragDrop(from, dropped);
             }
 
-            return false;
+            if (!canDrop)
+            {
+                PrivateOverheadMessage(MessageType.Regular, 0x3B2, 1043257, from.NetState); // The animal shies away.
+            }
+
+            return canDrop;
         }
 
         protected virtual BaseAI ForcedAI => null;
@@ -3047,12 +3072,6 @@ namespace Server.Mobiles
                 case AIType.AI_Melee:
                     m_AI = new MeleeAI(this);
                     break;
-                case AIType.AI_Animal:
-                    m_AI = new AnimalAI(this);
-                    break;
-                case AIType.AI_Berserk:
-                    m_AI = new BerserkAI(this);
-                    break;
                 case AIType.AI_Archer:
                     m_AI = new ArcherAI(this);
                     break;
@@ -3064,13 +3083,6 @@ namespace Server.Mobiles
                     break;
                 case AIType.AI_Mage:
                     m_AI = new MageAI(this);
-                    break;
-                case AIType.AI_Predator:
-                    //m_AI = new PredatorAI(this);
-                    m_AI = new MeleeAI(this);
-                    break;
-                case AIType.AI_Thief:
-                    m_AI = new ThiefAI(this);
                     break;
                 case AIType.AI_NecroMage:
                     m_AI = new NecroMageAI(this);
@@ -3389,6 +3401,7 @@ namespace Server.Mobiles
                 RemoveFollowers();
                 m_ControlMaster = value;
                 AddFollowers();
+
                 if (m_ControlMaster != null)
                 {
                     StopDeleteTimer();
@@ -3431,16 +3444,9 @@ namespace Server.Mobiles
             {
                 m_ControlOrder = value;
 
-                if (m_Allured)
+                if (m_Allured && m_ControlOrder != OrderType.None)
                 {
-                    if (m_ControlOrder == OrderType.Release)
-                    {
-                        Say(502003); // Sorry, but no.
-                    }
-                    else if (m_ControlOrder != OrderType.None)
-                    {
-                        Say(1079120); // Very well.
-                    }
+                    Say(1079120); // Very well.
                 }
 
                 if (m_AI != null)
@@ -3604,7 +3610,7 @@ namespace Server.Mobiles
             m.Delete();
         }
 
-        public virtual bool DeleteOnRelease => m_bSummoned;
+        public virtual bool DeleteOnRelease => m_bSummoned || m_Allured;
 
         public virtual void OnGaveMeleeAttack(Mobile defender)
         {
@@ -3700,18 +3706,9 @@ namespace Server.Mobiles
                 m_AI = null;
             }
 
-            if (m_DeleteTimer != null)
-            {
-                m_DeleteTimer.Stop();
-                m_DeleteTimer = null;
-            }
+            StopDeleteTimer();
 
             FocusMob = null;
-
-            if (IsAnimatedDead)
-            {
-                AnimateDeadSpell.Unregister(m_SummonMaster, this);
-            }
 
             base.OnAfterDelete();
         }
@@ -3728,7 +3725,7 @@ namespace Server.Mobiles
         {
             if (m_bDebugAI)
             {
-                PublicOverheadMessage(MessageType.Regular, 41, false, String.Format(format, args));
+                PublicOverheadMessage(MessageType.Regular, 41, false, string.Format(format, args));
             }
         }
 
@@ -4121,7 +4118,7 @@ namespace Server.Mobiles
                         else
                         {
                             // I will teach thee all I know, if paid the amount in full.  The price is:
-                            Say(1019077, AffixType.Append, String.Format(" {0}", pointsToLearn), "");
+                            Say(1019077, AffixType.Append, string.Format(" {0}", pointsToLearn), "");
                             Say(1043108); // For less I shall teach thee less.
 
                             m_Teaching = skill;
@@ -4209,6 +4206,15 @@ namespace Server.Mobiles
                     BuffInfo.AddBuff(aggressor, new BuffInfo(BuffIcon.HeatOfBattleStatus, 1153801, 1153827, Aggression.CombatHeatDelay, aggressor, true));
                 }
             }
+            else if (aggressor is BaseCreature)
+            {
+                var pm = ((BaseCreature)aggressor).GetMaster() as PlayerMobile;
+
+                if (pm != null)
+                {
+                    AggressiveAction(pm, criminal);
+                }
+            }
 
             base.AggressiveAction(aggressor, criminal);
 
@@ -4228,8 +4234,7 @@ namespace Server.Mobiles
                 }
             }
 
-            StopFlee();
-
+            //StopFlee();
             ForceReacquire();
 
             if (aggressor.ChangingCombatant && (m_bControlled || m_bSummoned) &&
@@ -4974,17 +4979,26 @@ namespace Server.Mobiles
                     List<Item> list = new List<Item>(Backpack.Items);
                     foreach (Item item in list)
                     {
-                        b.DropItem(item);
+                        if (item.Movable)
+                            b.DropItem(item);
+                        else
+                            item.Delete();
                     }
 
                     BaseHouse house = BaseHouse.FindHouseAt(this);
                     if (house != null)
                     {
-                        b.MoveToWorld(house.BanLocation, house.Map);
+                        if (Backpack.Items.Count == 0)
+                            b.Delete();
+                        else
+                            b.MoveToWorld(house.BanLocation, house.Map);
                     }
                     else
                     {
-                        b.MoveToWorld(Location, Map);
+                        if (Backpack.Items.Count == 0)
+                            b.Delete();
+                        else
+                            b.MoveToWorld(Location, Map);
                     }
                 }
             }
@@ -5091,9 +5105,10 @@ namespace Server.Mobiles
 
             if (backpack == null)
             {
-                backpack = new Backpack();
-
-                backpack.Movable = false;
+                backpack = new Backpack
+                {
+                    Movable = false
+                };
 
                 AddItem(backpack);
             }
@@ -5248,7 +5263,7 @@ namespace Server.Mobiles
 
         public void PackItem(Item item)
         {
-            if (Summoned || item == null)
+            if ((Summoned && item.Movable) || item == null)
             {
                 if (item != null)
                 {
@@ -5262,9 +5277,10 @@ namespace Server.Mobiles
 
             if (pack == null)
             {
-                pack = new Backpack();
-
-                pack.Movable = false;
+                pack = new Backpack
+                {
+                    Movable = false
+                };
 
                 AddItem(pack);
             }
@@ -5367,7 +5383,7 @@ namespace Server.Mobiles
         {
             base.AddNameProperties(list);
 
-            if (Controlled && !String.IsNullOrEmpty(EngravedText))
+            if (Controlled && !string.IsNullOrEmpty(EngravedText))
             {
                 list.Add(1157315, EngravedText); // <BASEFONT COLOR=#668cff>Branded: ~1_VAL~<BASEFONT COLOR=#FFFFFF>
             }
@@ -5381,6 +5397,9 @@ namespace Server.Mobiles
             {
                 list.Add(1080078); // guarding
             }
+
+            if (IsGolem)
+                list.Add(1113697); // (Golem)
 
             if (Summoned && !IsAnimatedDead && !IsNecroFamiliar && !(this is Clone))
             {
@@ -5559,10 +5578,13 @@ namespace Server.Mobiles
             }
         }
 
-        public virtual bool IsAggressiveMonster => IsMonster && (m_FightMode == FightMode.Closest ||
-                                     m_FightMode == FightMode.Strongest ||
-                                     m_FightMode == FightMode.Weakest ||
-                                     m_FightMode == FightMode.Good);
+        public virtual bool IsAggressiveMonster => IsMonster 
+        										&&
+        										 ( m_FightMode == FightMode.Closest 
+        										|| m_FightMode == FightMode.Strongest 
+        										|| m_FightMode == FightMode.Weakest 
+        										|| m_FightMode == FightMode.Good
+        										 );
 
         private class FKEntry
         {
@@ -5764,17 +5786,9 @@ namespace Server.Mobiles
                 }
             }
         }
-
-        public virtual bool GivesMLMinorArtifact => false;
         #endregion
 
-        public virtual void OnRelease(Mobile from)
-        {
-            if (m_Allured)
-            {
-                Timer.DelayCall(TimeSpan.FromSeconds(2), Delete);
-            }
-        }
+        public virtual bool GivesMLMinorArtifact => false;
 
         public override void OnItemLifted(Mobile from, Item item)
         {
@@ -6118,7 +6132,7 @@ namespace Server.Mobiles
         {
             bool ret = base.CanBeRenamedBy(from);
 
-            if (Controlled && from == ControlMaster && !from.Region.IsPartOf<Jail>())
+            if (Controlled && from == ControlMaster && !from.Region.IsPartOf<Jail>() && !Allured)
             {
                 ret = true;
             }
@@ -6171,11 +6185,7 @@ namespace Server.Mobiles
                 AdjustSpeeds();
                 CurrentSpeed = m_dActiveSpeed;
 
-                if (m_DeleteTimer != null)
-                {
-                    m_DeleteTimer.Stop();
-                    m_DeleteTimer = null;
-                }
+                StopDeleteTimer();
 
                 RemoveAggressed(m);
                 RemoveAggressor(m);
@@ -6282,8 +6292,8 @@ namespace Server.Mobiles
             creature.SetHits(
                 (int)Math.Floor(creature.HitsMax * (1 + ArcaneEmpowermentSpell.GetSpellBonus(caster, false) / 100.0)));
 
-            new UnsummonTimer(caster, creature, duration).Start();
             creature.m_SummonEnd = DateTime.UtcNow + duration;
+            TimerRegistry.Register<BaseCreature>("UnsummonTimer", creature, duration, c => c.Delete());
 
             creature.MoveToWorld(p, caster.Map);
 
@@ -6587,9 +6597,10 @@ namespace Server.Mobiles
             Mobile target = GetBardTarget(Controlled);
 
             if (target == null || !target.InLOS(this) || !InRange(target.Location, BaseInstrument.GetBardRange(this, SkillName.Discordance)) || CheckInstrument() == null)
+            {
                 return false;
+            }
 
-            // TODO: get mana
             if (AbilityProfile != null && AbilityProfile.HasAbility(MagicalAbility.Discordance) && Mana < 25)
             {
                 return false;
@@ -6603,7 +6614,9 @@ namespace Server.Mobiles
                 Spell = null;
 
             if (!UseSkill(SkillName.Discordance))
+            {
                 return false;
+            }
 
             if (Target is Discordance.DiscordanceTarget)
             {
@@ -6677,18 +6690,17 @@ namespace Server.Mobiles
 
             if (inst == null)
             {
-                if (Backpack == null)
-                    return null;
-
-                inst = Backpack.FindItemByType(typeof(BaseInstrument)) as BaseInstrument;
+                inst = Backpack == null ? null : Backpack.FindItemByType(typeof(BaseInstrument)) as BaseInstrument;
 
                 if (inst == null)
                 {
-                    inst = new Harp();
-                    inst.SuccessSound = PlayInstrumentSound ? 0x58B : 0;
-                    inst.FailureSound = PlayInstrumentSound ? 0x58C : 0;
-                    inst.Movable = false;
-                    inst.Quality = ItemQuality.Exceptional;
+                    inst = new Harp
+                    {
+                        SuccessSound = PlayInstrumentSound ? 0x58B : 0,
+                        FailureSound = PlayInstrumentSound ? 0x58C : 0,
+                        Movable = false,
+                        Quality = ItemQuality.Exceptional
+                    };
 
                     PackItem(inst);
                 }
@@ -7523,6 +7535,76 @@ namespace Server.Mobiles
             ColUtility.Free(toRemove);
         }
     }
+
+    #region Delete Previously Tamed Timer
+    public class CreatureDeleteTimer : Timer
+    {
+        public static CreatureDeleteTimer Instance { get; set; }
+
+        public List<BaseCreature> ToDelete { get; set; } = new List<BaseCreature>();
+
+        public CreatureDeleteTimer()
+            : base(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5))
+        {
+            Priority = TimerPriority.OneMinute;
+        }
+
+        protected override void OnTick()
+        {
+            var toDelete = ToDelete.Where(bc => bc.Deleted || bc.DeleteTime < DateTime.UtcNow).ToList();
+
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                var bc = toDelete[i];
+
+                if (!bc.Summoned && !bc.Deleted && !bc.IsStabled && bc.DeleteTime != DateTime.MinValue)
+                {
+                    bc.Delete();
+                }
+
+                RemoveFromTimer(bc);
+            }
+
+            ColUtility.Free(toDelete);
+        }
+
+        public static void RegisterTimer(BaseCreature bc)
+        {
+            if (Instance == null)
+            {
+                Instance = new CreatureDeleteTimer();
+            }
+
+            if (!Instance.Running)
+            {
+                Instance.Start();
+            }
+
+            if (!Instance.ToDelete.Contains(bc) && !bc.Summoned && !bc.Deleted && !bc.IsStabled)
+            {
+                Instance.ToDelete.Add(bc);
+            }
+        }
+
+        public static void RemoveFromTimer(BaseCreature bc)
+        {
+            if (Instance == null)
+            {
+                return;
+            }
+
+            if (Instance.ToDelete.Contains(bc))
+            {
+                Instance.ToDelete.Remove(bc);
+
+                if (Instance.ToDelete.Count == 0)
+                {
+                    Instance.Stop();
+                }
+            }
+        }
+    }
+    #endregion
 
     public sealed class PetWindow : Packet
     {

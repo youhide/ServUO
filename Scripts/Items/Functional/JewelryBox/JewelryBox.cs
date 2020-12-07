@@ -1,4 +1,5 @@
 using Server.ContextMenus;
+using Server.Gumps;
 using Server.Multis;
 using Server.Network;
 using System;
@@ -7,8 +8,8 @@ using System.Collections.Generic;
 namespace Server.Items
 {
     [Furniture]
-    [FlipableAttribute(0x9F1C, 0x9F1D)]
-    public class JewelryBox : Container, IDyable
+    [Flipable(0x9F1C, 0x9F1D)]
+    public class JewelryBox : Container, IDyable, ISecurable
     {
         public override int LabelNumber => 1157694;  // Jewelry Box
 

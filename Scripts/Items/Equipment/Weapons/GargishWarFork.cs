@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48BE, 0x48BF)]
+    [Flipable(0x48BE, 0x48BF)]
     public class GargishWarFork : BaseSpear
     {
         [Constructable]
@@ -27,9 +27,6 @@ namespace Server.Items
         public override int InitMinHits => 31;
         public override int InitMaxHits => 110;
         public override WeaponAnimation DefAnimation => WeaponAnimation.Pierce1H;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

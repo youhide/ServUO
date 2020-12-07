@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48B0, 0x48B1)]
+    [Flipable(0x48B0, 0x48B1)]
     public class GargishBattleAxe : BaseAxe
     {
         [Constructable]
@@ -25,8 +25,7 @@ namespace Server.Items
 
         public override int InitMinHits => 31;
         public override int InitMaxHits => 70;
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);

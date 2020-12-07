@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48C6, 0x48C7)]
+    [Flipable(0x48C6, 0x48C7)]
     public class GargishBoneHarvester : BaseSword
     {
         [Constructable]
@@ -26,9 +26,6 @@ namespace Server.Items
         public override int DefMissSound => 0x23A;
         public override int InitMinHits => 31;
         public override int InitMaxHits => 70;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

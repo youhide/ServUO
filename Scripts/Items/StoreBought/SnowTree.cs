@@ -9,13 +9,15 @@ namespace Server.Items
         [Constructable]
         public SnowTreeAddon(bool trunk)
         {
-            AddComponent(new LocalizedAddonComponent(0xDA0, 1071103), 0, 0, 0);
+            AddComponent(new LocalizedAddonComponent(0xCE0, 1071103), 0, 0, 0);
 
             if (!trunk)
             {
-                LocalizedAddonComponent comp = new LocalizedAddonComponent(0xD9D, 1071103);
-                comp.Hue = 1153;
-                AddComponent(comp, 0, 0, 0);
+                var comp = new LocalizedAddonComponent(0xD9D, 1071103)
+                {
+                    Hue = 1153
+                };
+                AddComponent(comp, 0, 0, 4);
             }
         }
 
@@ -28,7 +30,7 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.WriteEncodedInt(0); // version
+            writer.WriteEncodedInt(1); // version
         }
 
         public override void Deserialize(GenericReader reader)
@@ -36,6 +38,42 @@ namespace Server.Items
             base.Deserialize(reader);
 
             int version = reader.ReadEncodedInt();
+
+            if (version == 0)
+            {
+                Timer.DelayCall(FixTree);
+            }
+        }
+
+        private void FixTree()
+        {
+            AddonComponent toDelete = null;
+
+            foreach (var comp in Components)
+            {
+                if (comp.ItemID == 0xDA0)
+                {
+                    comp.ItemID = 0xCE0;
+                }
+
+                if (comp.ItemID == 0xD9D)
+                {
+                    toDelete = comp;
+                }
+            }
+
+            if (toDelete != null)
+            {
+                Components.Remove(toDelete);
+                toDelete.Addon = null;
+                toDelete.Delete();
+
+                var comp = new LocalizedAddonComponent(0xD9D, 1071103)
+                {
+                    Hue = 1153
+                };
+                AddComponent(comp, 0, 0, 4);
+            }
         }
     }
 

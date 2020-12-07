@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48CC, 0x48CD)]
+    [Flipable(0x48CC, 0x48CD)]
     public class GargishTessen : BaseBashing
     {
         [Constructable]
@@ -28,9 +28,6 @@ namespace Server.Items
         public override int InitMinHits => 55;
         public override int InitMaxHits => 60;
         public override WeaponAnimation DefAnimation => WeaponAnimation.Bash2H;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

@@ -10,7 +10,7 @@ namespace Server.Items
     public class EnormousVenusFlytrapAddon : BaseAddonContainer
     {
         public override int LabelNumber => 1154462;  // Enormous Venus Flytrap
-
+        public override bool IsDecoContainer => false;
         public override bool Security => false;
         public override int DefaultGumpID => 0x9;
 
@@ -28,7 +28,7 @@ namespace Server.Items
             m_Cleanup = new List<CleanupArray>();
         }
 
-        public virtual void Flip(Mobile from, Direction direction)
+        public virtual void Flip(Direction direction)
         {
             switch (direction)
             {
@@ -105,7 +105,7 @@ namespace Server.Items
                         if (m_Cleanup.Find(x => x.mobiles == m && x.confirm) != null)
                         {
                             double point = m_Cleanup.Where(x => x.mobiles == m && x.confirm).Sum(x => x.points);
-                            m.SendLocalizedMessage(1151280, String.Format("{0}\t{1}", point.ToString(), m_Cleanup.Count(r => r.mobiles == m))); // You have received approximately ~1_VALUE~points for turning in ~2_COUNT~items for Clean Up Britannia.
+                            m.SendLocalizedMessage(1151280, string.Format("{0}\t{1}", point.ToString(), m_Cleanup.Count(r => r.mobiles == m))); // You have received approximately ~1_VALUE~points for turning in ~2_COUNT~items for Clean Up Britannia.
                             PointsSystem.CleanUpBritannia.AwardPoints(m, point);
                         }
                     }
@@ -214,7 +214,7 @@ namespace Server.Items
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt();
 
             if (Items.Count > 0)
                 m_Timer = Timer.DelayCall(TimeSpan.FromMinutes(3), Empty);
@@ -256,7 +256,7 @@ namespace Server.Items
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt();
         }
     }
 }

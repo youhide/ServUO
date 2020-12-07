@@ -23,33 +23,56 @@ namespace Server.Items
         public int LootMax { get; set; }                // Max Intensity for new loot system
         public int[] PowerfulLootRange { get; set; }    // Range of over-cappeed for new loot system
 
+        public bool UseStandardMax { get; set; }
+
         public PropInfo(int itemRef, int sMax, int lMax)
-            : this((ItemType)itemRef, -1, sMax, lMax, null)
+            : this((ItemType)itemRef, -1, sMax, lMax, null, false)
+        {
+        }
+
+        public PropInfo(int itemRef, int sMax, int lMax, bool useStarndardMax)
+            : this((ItemType)itemRef, -1, sMax, lMax, null, useStarndardMax)
         {
         }
 
         public PropInfo(int itemRef, int scale, int sMax, int lMax)
-            : this((ItemType)itemRef, scale, sMax, lMax, null)
+            : this((ItemType)itemRef, scale, sMax, lMax, null, false)
+        {
+        }
+
+        public PropInfo(int itemRef, int scale, int sMax, int lMax, bool useStarndardMax)
+            : this((ItemType)itemRef, scale, sMax, lMax, null, useStarndardMax)
         {
         }
 
         public PropInfo(int itemRef, int sMax, int lMax, int[] powerfulRange)
-            : this((ItemType)itemRef, -1, sMax, lMax, powerfulRange)
+            : this((ItemType)itemRef, -1, sMax, lMax, powerfulRange, false)
+        {
+        }
+
+        public PropInfo(int itemRef, int sMax, int lMax, int[] powerfulRange, bool useStandardMax)
+            : this((ItemType)itemRef, -1, sMax, lMax, powerfulRange, useStandardMax)
         {
         }
 
         public PropInfo(int itemRef, int scale, int sMax, int lMax, int[] powerfulRange)
-            : this((ItemType)itemRef, scale, sMax, lMax, powerfulRange)
+            : this((ItemType)itemRef, scale, sMax, lMax, powerfulRange, false)
         {
         }
 
-        public PropInfo(ItemType type, int scale, int sMax, int lMax, int[] powerfulRange)
+        public PropInfo(int itemRef, int scale, int sMax, int lMax, int[] powerfulRange, bool useStandardMax)
+            : this((ItemType)itemRef, scale, sMax, lMax, powerfulRange, useStandardMax)
+        {
+        }
+
+        public PropInfo(ItemType type, int scale, int sMax, int lMax, int[] powerfulRange, bool useStandardMax)
         {
             ItemType = type;
             Scale = scale;
             StandardMax = sMax;
             LootMax = lMax;
             PowerfulLootRange = powerfulRange;
+            UseStandardMax = useStandardMax;
         }
     }
 
@@ -137,7 +160,7 @@ namespace Server.Items
                     }
                     else
                     {
-                        throw new ArgumentException(String.Format("Property Category {0} already exists for {1}!", cat.ItemType.ToString(), attribute.ToString()));
+                        throw new ArgumentException(string.Format("Property Category {0} already exists for {1}!", cat.ItemType.ToString(), attribute.ToString()));
                     }
                 }
             }
@@ -219,7 +242,7 @@ namespace Server.Items
 
                 if (localization <= 0)
                 {
-                    string label = item.Name ?? String.Empty;
+                    string label = item.Name ?? string.Empty;
 
                     LocBuffer[type] = label;
                     item.Delete();
@@ -248,10 +271,10 @@ namespace Server.Items
             // i = runic, r = reforg, l = loot
             // 1 = melee, 2 = ranged, 3 = armor, 4 = sheild, 5 = hat, 6 = jewels
             Register(1, new ItemPropertyInfo(AosAttribute.DefendChance, 1075620, 110, typeof(RelicFragment), typeof(Tourmaline), typeof(EssenceSingularity), 1, 1, 15, 1111947,
-                new PropInfo(1, 15, 15, new int[] { 20 }), new PropInfo(2, 25, 25, new int[] { 30, 35 }), new PropInfo(3, 0, 5), new PropInfo(4, 15, 15, new int[] { 20 }), new PropInfo(5, 0, 5), new PropInfo(6, 15, 15, new int[] { 20 })));
+                new PropInfo(1, 15, 15, new int[] { 20 }), new PropInfo(2, 25, 25, new int[] { 30, 35 }), new PropInfo(3, 0, 5, true), new PropInfo(4, 15, 15, new int[] { 20 }), new PropInfo(5, 0, 5, true), new PropInfo(6, 15, 15, new int[] { 20 })));
 
             Register(2, new ItemPropertyInfo(AosAttribute.AttackChance, 1075616, 130, typeof(RelicFragment), typeof(Amber), typeof(EssencePrecision), 1, 1, 15, 1111958,
-                new PropInfo(1, 15, 15, new int[] { 20 }), new PropInfo(2, 25, 25, new int[] { 30, 35 }), new PropInfo(3, 0, 5), new PropInfo(4, 15, 15, new int[] { 20 }), new PropInfo(5, 0, 5), new PropInfo(6, 15, 15, new int[] { 20 })));
+                new PropInfo(1, 15, 15, new int[] { 20 }), new PropInfo(2, 25, 25, new int[] { 30, 35 }), new PropInfo(3, 0, 5, true), new PropInfo(4, 15, 15, new int[] { 20 }), new PropInfo(5, 0, 5, true), new PropInfo(6, 15, 15, new int[] { 20 })));
 
             Register(3, new ItemPropertyInfo(AosAttribute.RegenHits, 1075627, 100, typeof(EnchantedEssence), typeof(Tourmaline), typeof(SeedOfRenewal), 1, 1, 2, 1111994,
                 new PropInfo(1, 3, 0, 9), new PropInfo(2, 3, 0, 9), new PropInfo(3, 2, 2, new int[] { 4 }), new PropInfo(4, 0, 2, new int[] { 4 }), new PropInfo(5, 2, 2, new int[] { 4 })));
@@ -280,11 +303,11 @@ namespace Server.Items
             Register(11, new ItemPropertyInfo(AosAttribute.BonusMana, 1075631, 110, typeof(EnchantedEssence), typeof(Sapphire), typeof(LuminescentFungi), 1, 1, 8, 1112002,
                 new PropInfo(1, 0, 5), new PropInfo(2, 0, 5), new PropInfo(3, 8, 8, new int[] { 9, 10 }), new PropInfo(4, 0, 5), new PropInfo(5, 8, 8, new int[] { 9, 10 }), new PropInfo(6, 0, 5)));
 
-            Register(12, new ItemPropertyInfo(AosAttribute.WeaponDamage, 1079399, 100, typeof(EnchantedEssence), typeof(Citrine), typeof(CrystalShards), 5, 1, 50, 1112005,
+            Register(12, new ItemPropertyInfo(AosAttribute.WeaponDamage, 1079399, 100, typeof(EnchantedEssence), typeof(Citrine), typeof(CrystalShards), 1, 1, 50, 1112005,
                 new PropInfo(1, 50, 50, new int[] { 55, 60, 65, 70 }), new PropInfo(2, 50, 50, new int[] { 55, 60, 65, 70 }), new PropInfo(4, 0, 35), new PropInfo(6, 25, 25, new int[] { 30, 35 })));
 
             Register(13, new ItemPropertyInfo(AosAttribute.WeaponSpeed, 1075629, 110, typeof(RelicFragment), typeof(Tourmaline), typeof(EssenceControl), 5, 5, 30, 1112045,
-                new PropInfo(1, 30, 30, new int[] { 35, 40 }), new PropInfo(4, 0, 5, new int[] { 10 }), new PropInfo(6, 0, 5, new int[] { 10 })));
+                new PropInfo(1, 30, 30, new int[] { 35, 40 }), new PropInfo(2, 30, 30, new int[] { 35, 40 }), new PropInfo(4, 0, 5, new int[] { 10 }), new PropInfo(6, 0, 5, new int[] { 10 })));
 
             Register(14, new ItemPropertyInfo(AosAttribute.SpellDamage, 1075628, 100, typeof(EnchantedEssence), typeof(Emerald), typeof(CrystalShards), 1, 1, 12, 1112041,
                 new PropInfo(6, 12, 12, new int[] { 14, 16, 18 })));
@@ -307,7 +330,7 @@ namespace Server.Items
             Register(20, new ItemPropertyInfo(AosAttribute.EnhancePotions, 1075624, 100, typeof(EnchantedEssence), typeof(Citrine), typeof(CrushedGlass), 5, 5, 25, 1111950,
                 new PropInfo(1, 0, 15), new PropInfo(2, 0, 15), new PropInfo(3, 0, 5), new PropInfo(5, 0, 5), new PropInfo(6, 25, 25, new int[] { 30, 35 })));
 
-            Register(21, new ItemPropertyInfo(AosAttribute.Luck, 1061153, 100, typeof(MagicalResidue), typeof(Citrine), typeof(ChagaMushroom), 10, 10, 100, 1111999,
+            Register(21, new ItemPropertyInfo(AosAttribute.Luck, 1061153, 100, typeof(MagicalResidue), typeof(Citrine), typeof(ChagaMushroom), 1, 1, 100, 1111999,
                 new PropInfo(1, 100, 100, new int[] { 110, 120, 130, 140, 150 }), new PropInfo(2, 120, 120, new int[] { 130, 140, 150, 160, 170 }), new PropInfo(3, 100, 100, new int[] { 110, 120, 130, 140, 150 }), new PropInfo(4, 100, 100, new int[] { 110, 120, 130, 140, 150 }), new PropInfo(5, 100, 100, new int[] { 110, 120, 130, 140, 150 }), new PropInfo(6, 100, 100, new int[] { 110, 120, 130, 140, 150 })));
 
             Register(22, new ItemPropertyInfo(AosAttribute.SpellChanneling, 1079766, 100, typeof(MagicalResidue), typeof(Diamond), typeof(SilverSnakeSkin), 0, 1, 1, 1112040,
@@ -397,14 +420,21 @@ namespace Server.Items
             Register(55, new ItemPropertyInfo(AosElementAttribute.Energy, 1061162, 100, typeof(MagicalResidue), typeof(Amethyst), typeof(BouraPelt), 1, 1, 15, 1112008,
                 new PropInfo(1, 10, 100, 100), new PropInfo(2, 10, 100, 100), new PropInfo(3, 15, 15, new int[] { 20, 25, 30 }), new PropInfo(4, 15, 15), new PropInfo(5, 15, 15, new int[] { 20, 25, 30 }), new PropInfo(6, 15, 15, new int[] { 20 })));
 
+            // Non-Imbuable
+            Register(56, new ItemPropertyInfo(AosElementAttribute.Chaos, 1151805, 100, 1, 1, 15, 0,
+                new PropInfo(1, 10, 100, 100), new PropInfo(2, 10, 100, 100)));
+
             Register(60, new ItemPropertyInfo("WeaponVelocity", 1080416, 140, typeof(RelicFragment), typeof(Tourmaline), typeof(EssenceDirection), 1, 11, 50, 1112048,
                 new PropInfo(2, 50, 50)));
 
             Register(61, new ItemPropertyInfo(AosAttribute.BalancedWeapon, 1072792, 150, typeof(RelicFragment), typeof(Amber), typeof(EssenceBalance), 0, 1, 1, 1112047,
-                new PropInfo(1, 1, 1), new PropInfo(2, 1, 1)));
+               new PropInfo(2, 1, 1)));            
 
             // Non-Imbuable, Non-Loot
             Register(62, new ItemPropertyInfo("SearingWeapon", 1151183, 150, 0, 1, 1));
+
+            Register(63, new ItemPropertyInfo(AosAttribute.BalancedWeapon, 1072792, 100, typeof(RelicFragment), typeof(Amber), typeof(EssenceBalance), 0, 1, 1, 1153740,
+                new PropInfo(1, 1, 1)));
 
             // Slayers
             Register(101, new ItemPropertyInfo(SlayerName.OrcSlaying, 1079741, 100, typeof(MagicalResidue), typeof(Emerald), typeof(WhitePearl), 0, 1, 1, 1111977, new PropInfo(1, 1, 1), new PropInfo(2, 1, 1)));
@@ -583,7 +613,7 @@ namespace Server.Items
         {
             if (Table.ContainsKey(id))
             {
-                throw new ArgumentException(String.Format("ID Already Exists: {0}", id));
+                throw new ArgumentException(string.Format("ID Already Exists: {0}", id));
             }
             else
             {
@@ -698,10 +728,8 @@ namespace Server.Items
 
         public static int GetMaxIntensity(Item item, object attribute)
         {
-            return GetMaxIntensity(item, GetID(attribute), false);
+            return GetMaxIntensity(item, GetID(attribute), false, false);
         }
-
-        private static readonly int[] _ForceUseNewTable = { 12, 1, 2 };
 
         /// <summary>
         /// Maximum intensity in regards to imbuing weight calculation. Some items may be over this 'cap'
@@ -709,15 +737,16 @@ namespace Server.Items
         /// <param name="item">item to check</param>
         /// <param name="id">property id</param>
         /// <param name="imbuing">true for imbuing, false for loot</param>
+        /// <param name="applyingProperty">are we calling this to assign a property value</param>
         /// <returns></returns>
-        public static int GetMaxIntensity(Item item, int id, bool imbuing)
+        public static int GetMaxIntensity(Item item, int id, bool imbuing, bool applyingProperty = false)
         {
             if (Table.ContainsKey(id))
             {
                 PropInfo info = Table[id].GetItemTypeInfo(GetItemType(item));
 
-                // First, we try to get the max intensity from the PropInfo. If null or we're getting an intensity for imbuing purpopses, we go to the default MaxIntenity
-                if (info == null || (imbuing && !_ForceUseNewTable.Any(i => i == id)))
+                // First, we try to get the max intensity from the PropInfo. If null or we're getting an intensity for special imbuing purpopses, we go to the default MaxIntenity
+                if (info == null || (!applyingProperty && info.UseStandardMax) || (imbuing && !ForcesNewLootMax(item, id)))
                 {
                     if (item is BaseWeapon && (id == 25 || id == 27))
                     {
@@ -738,6 +767,19 @@ namespace Server.Items
             }
 
             return 0;
+        }
+
+        private static readonly int[] _ForceUseNewTable = { 1, 2, 12 };
+
+        /// <summary>
+        /// We may want to force the new loot tables for items such as ranged weapons that have a different max than melee, think hci/dci (15/25).
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool ForcesNewLootMax(Item item, int id)
+        {
+            return _ForceUseNewTable.Any(i => i == id);
         }
 
         public static int[] GetMaxOvercappedRange(Item item, int id)
@@ -813,9 +855,22 @@ namespace Server.Items
         {
             if (Table.ContainsKey(id))
             {
-                if (loot && id >= 151 && id <= 183)
+                if (loot)
                 {
-                    return 5;
+                    if (id >= 151 && id <= 183)
+                    {
+                        return 5;
+                    }
+
+                    if (id == 21)
+                    {
+                        return 10;
+                    }
+
+                    if (id == 12)
+                    {
+                        return 5;
+                    }
                 }
 
                 PropInfo info = Table[id].GetItemTypeInfo(GetItemType(item));
@@ -1029,6 +1084,7 @@ namespace Server.Items
                 case AosElementAttribute.Cold: return 53;
                 case AosElementAttribute.Poison: return 54;
                 case AosElementAttribute.Energy: return 55;
+                case AosElementAttribute.Chaos: return 56;
             }
 
             return -1;
@@ -1069,7 +1125,7 @@ namespace Server.Items
                 return LootTable[type];
             }
 
-            return null;
+            return new List<int>();
         }
 
         public static void BuildLootTables()
@@ -1185,9 +1241,10 @@ namespace Server.Items
                             return !reforged;
                         case 206: // Reactive Paralyze Weapon
                             return item is BaseWeapon && item.Layer == Layer.TwoHanded;
-                        case 207: // Reactive Paralyze Armor
+                        case 220: // Reactive Paralyze Armor
                             return item is BaseShield;
-                        case 61:  // Balanced
+                        case 63:  // Balanced
+                        case 61:
                             return item.Layer == Layer.TwoHanded;
                         case 40:  // UBWS
                             return GetItemType(item) == ItemType.Melee;

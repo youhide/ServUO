@@ -3,7 +3,7 @@ using System;
 
 namespace Server.Items
 {
-    [FlipableAttribute(0x457E, 0x457F)]
+    [Flipable(0x457E, 0x457F)]
     public class GargishLeatherWingArmor : BaseArmor, IRangeDamage
     {
         private AosElementAttributes m_AosElementDamages;
@@ -36,8 +36,6 @@ namespace Server.Items
         public override ArmorMaterialType MaterialType => ArmorMaterialType.Leather;
         public override CraftResource DefaultResource => CraftResource.RegularLeather;
         public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override int GetLuckBonus() { return 0; }
 

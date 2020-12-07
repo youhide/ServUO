@@ -12,6 +12,8 @@ using Server.Spells.Ninjitsu;
 using Server.Spells.Sixth;
 using Server.Spells.SkillMasteries;
 using Server.Spells.Spellweaving;
+using Server.Misc;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -769,11 +771,6 @@ namespace Server.Items
             return false;
         }
 
-        public virtual Race RequiredRace => null;
-        //On OSI, there are no weapons with race requirements, this is for custom stuff
-
-        public virtual bool CanBeWornByGargoyles => false;
-
         public override bool CanEquip(Mobile from)
         {
             if (from.IsPlayer())
@@ -802,29 +799,8 @@ namespace Server.Items
                 }
             }
 
-            bool morph = from.FindItemOnLayer(Layer.Earrings) is MorphEarrings;
-
-            if (from.Race == Race.Gargoyle && !CanBeWornByGargoyles && from.IsPlayer())
+            if (!RaceDefinitions.ValidateEquipment(from, this))
             {
-                from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111708); // Gargoyles can't wear this.
-                return false;
-            }
-
-            if (RequiredRace != null && from.Race != RequiredRace && !morph)
-            {
-                if (RequiredRace == Race.Elf)
-                {
-                    from.SendLocalizedMessage(1072203); // Only Elves may use this.
-                }
-                else if (RequiredRace == Race.Gargoyle)
-                {
-                    from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111707); // Only gargoyles can wear this.
-                }
-                else
-                {
-                    from.SendMessage("Only {0} may use ", RequiredRace.PluralName);
-                }
-
                 return false;
             }
             else if (from.Dex < DexRequirement)
@@ -979,6 +955,7 @@ namespace Server.Items
                     FocusWeilder = null;
 
                 SkillMasterySpell.OnWeaponRemoved(m, this);
+                ForceOfNature.Remove(m);
 
                 if (IsSetItem && m_SetEquipped)
                 {
@@ -1053,7 +1030,6 @@ namespace Server.Items
                 if (mcng > val)
                 {
                     sk = SkillName.Macing;
-                    val = mcng;
                 }
             }
             else if (m_AosWeaponAttributes.MageWeapon != 0)
@@ -1140,6 +1116,11 @@ namespace Server.Items
 
             bonus += AosAttributes.GetValue(attacker, AosAttribute.AttackChance);
 
+            if (attacker is BaseCreature bc && !bc.Controlled && defender is BaseCreature bc2 && bc2.Controlled)
+            {
+                bonus = Math.Max(bonus, 45);
+            }
+
             //SA Gargoyle cap is 50, else 45
             bonus = Math.Min(attacker.Race == Race.Gargoyle ? 50 : 45, bonus);
 
@@ -1152,7 +1133,7 @@ namespace Server.Items
             if (info != null && info.Defender == defender)
                 bonus -= info.DefenseChanceMalus;
 
-            int max = 45 + BaseArmor.GetRefinedDefenseChance(defender);
+            int max = 45 + BaseArmor.GetRefinedDefenseChance(defender) + WhiteTigerFormSpell.GetDefenseCap(defender);
 
             // Defense Chance Increase = 45%
             if (bonus > max)
@@ -1274,22 +1255,13 @@ namespace Server.Items
 
         public virtual TimeSpan OnSwing(Mobile attacker, IDamageable damageable, double damageBonus)
         {
-            bool canSwing = true;
-
-            canSwing = (!attacker.Paralyzed && !attacker.Frozen);
+            bool canSwing = !attacker.Paralyzed && !attacker.Frozen;
 
             if (canSwing)
             {
                 Spell sp = attacker.Spell as Spell;
 
                 canSwing = (sp == null || !sp.IsCasting || !sp.BlocksMovement);
-            }
-
-            if (canSwing)
-            {
-                PlayerMobile p = attacker as PlayerMobile;
-
-                canSwing = (p == null || p.PeacedUntil <= DateTime.UtcNow);
             }
 
             if (canSwing && attacker.HarmfulCheck(damageable))
@@ -1301,9 +1273,8 @@ namespace Server.Items
                     attacker.Send(new Swing(0, attacker, damageable));
                 }
 
-                if (attacker is BaseCreature)
+                if (attacker is BaseCreature bc)
                 {
-                    BaseCreature bc = (BaseCreature)attacker;
                     WeaponAbility ab = bc.TryGetWeaponAbility();
 
                     if (ab != null)
@@ -1507,7 +1478,7 @@ namespace Server.Items
                     // Successful block removes the Honorable Execution penalty.
                     HonorableExecution.RemovePenalty(defender);
 
-                    if (CounterAttack.IsCountering(defender) && defender.InRange(attacker.Location, 1))
+                    if (CounterAttack.IsCountering(defender))
                     {
                         if (weapon != null)
                         {
@@ -1924,6 +1895,8 @@ namespace Server.Items
                 percentageBonus += (int)(move.GetDamageScalar(attacker, defender) * 100) - 100;
             }
 
+            percentageBonus += (int)(ForceOfNature.GetDamageScalar(attacker, defender) * 100) - 100;
+
             if (ConsecratedContext != null && ConsecratedContext.Owner == attacker)
             {
                 percentageBonus += ConsecratedContext.ConsecrateDamageBonus;
@@ -2069,8 +2042,6 @@ namespace Server.Items
                 }
             }
 
-            percentageBonus += ForceOfNature.GetBonus(attacker, defender);
-
             if (m_ExtendedWeaponAttributes.AssassinHoned > 0 && GetOppositeDir(attacker.Direction) == defender.Direction)
             {
                 if (!ranged || 0.5 > Utility.RandomDouble())
@@ -2155,8 +2126,8 @@ namespace Server.Items
             bool sparks = false;
             if (a == null && move == null)
             {
-                if (m_ExtendedWeaponAttributes.BoneBreaker > 0)
-                    damage += BoneBreakerContext.CheckHit(attacker, defender);
+                if (m_ExtendedWeaponAttributes.BoneBreaker > 0 && !AnimalForm.UnderTransformation(attacker))
+                    BoneBreakerContext.CheckHit(attacker, defender);
 
                 if (m_ExtendedWeaponAttributes.HitSwarm > 0 && Utility.Random(100) < m_ExtendedWeaponAttributes.HitSwarm)
                     SwarmContext.CheckHit(attacker, defender);
@@ -2457,6 +2428,8 @@ namespace Server.Items
                 a.OnHit(attacker, defender, damage);
             }
 
+            ForceOfNature.OnHit(attacker, defender);
+
             if (move != null)
             {
                 move.OnHit(attacker, defender, damage);
@@ -2719,14 +2692,14 @@ namespace Server.Items
             TimeSpan duration = TimeSpan.FromSeconds(30);
 
             defender.AddStatMod(
-                new StatMod(StatType.Str, String.Format("[Magic] {0} Curse", StatType.Str), -10, duration));
+                new StatMod(StatType.Str, string.Format("[Magic] {0} Curse", StatType.Str), -10, duration));
             defender.AddStatMod(
-                new StatMod(StatType.Dex, String.Format("[Magic] {0} Curse", StatType.Dex), -10, duration));
+                new StatMod(StatType.Dex, string.Format("[Magic] {0} Curse", StatType.Dex), -10, duration));
             defender.AddStatMod(
-                new StatMod(StatType.Int, String.Format("[Magic] {0} Curse", StatType.Int), -10, duration));
+                new StatMod(StatType.Int, string.Format("[Magic] {0} Curse", StatType.Int), -10, duration));
 
             int percentage = -10; //(int)(SpellHelper.GetOffsetScalar(Caster, m, true) * 100);
-            string args = String.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", percentage, percentage, percentage, 10, 10, 10, 10);
+            string args = string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}", percentage, percentage, percentage, 10, 10, 10, 10);
 
             Spells.Fourth.CurseSpell.AddEffect(defender, duration, 10, 10, 10);
             BuffInfo.AddBuff(defender, new BuffInfo(BuffIcon.Curse, 1075835, 1075836, duration, defender, args));
@@ -2898,7 +2871,12 @@ namespace Server.Items
 
             for (int i = 0; i < count; i++)
             {
-                AddBlood(defender, m.GetRandomSpawnPoint(b), m);
+                var p = m.GetRandomSpawnPoint(b);
+                p.Z = defender.Z;
+
+                SpellHelper.AdjustField(ref p, m, 16, false);
+
+                AddBlood(defender, p, m);
             }
         }
 
@@ -2916,7 +2894,7 @@ namespace Server.Items
 
             Effects.SendMovingEffect(defender, blood, id, 7, 10, true, false, blood.Hue, 0);
 
-            Timer.DelayCall(TimeSpan.FromMilliseconds(500), b => b.ItemID = id, blood);
+            Timer.DelayCall(TimeSpan.FromMilliseconds(750), b => b.ItemID = id, blood);
         }
 
         protected virtual bool CanDrawBlood(Mobile defender)
@@ -3393,7 +3371,7 @@ namespace Server.Items
             SetSaveFlag(ref flags, SaveFlag.SkillBonuses, !m_AosSkillBonuses.IsEmpty);
             SetSaveFlag(ref flags, SaveFlag.Slayer2, m_Slayer2 != SlayerName.None);
             SetSaveFlag(ref flags, SaveFlag.ElementalDamages, !m_AosElementDamages.IsEmpty);
-            SetSaveFlag(ref flags, SaveFlag.EngravedText, !String.IsNullOrEmpty(m_EngravedText));
+            SetSaveFlag(ref flags, SaveFlag.EngravedText, !string.IsNullOrEmpty(m_EngravedText));
             SetSaveFlag(ref flags, SaveFlag.xAbsorptionAttributes, !m_SAAbsorptionAttributes.IsEmpty);
             SetSaveFlag(ref flags, SaveFlag.xNegativeAttributes, !m_NegativeAttributes.IsEmpty);
             SetSaveFlag(ref flags, SaveFlag.Altered, m_Altered);
@@ -4196,7 +4174,7 @@ namespace Server.Items
 
             if (name == null)
             {
-                name = String.Format("#{0}", LabelNumber);
+                name = string.Format("#{0}", LabelNumber);
             }
 
             return name;
@@ -4346,9 +4324,9 @@ namespace Server.Items
                     int prefix = RunicReforging.GetPrefixName(m_ReforgedPrefix);
 
                     if (m_ReforgedSuffix == ReforgedSuffix.None)
-                        list.Add(1151757, String.Format("#{0}\t{1}", prefix, GetNameString())); // ~1_PREFIX~ ~2_ITEM~
+                        list.Add(1151757, string.Format("#{0}\t{1}", prefix, GetNameString())); // ~1_PREFIX~ ~2_ITEM~
                     else
-                        list.Add(1151756, String.Format("#{0}\t{1}\t#{2}", prefix, GetNameString(), RunicReforging.GetSuffixName(m_ReforgedSuffix))); // ~1_PREFIX~ ~2_ITEM~ of ~3_SUFFIX~
+                        list.Add(1151756, string.Format("#{0}\t{1}\t#{2}", prefix, GetNameString(), RunicReforging.GetSuffixName(m_ReforgedSuffix))); // ~1_PREFIX~ ~2_ITEM~ of ~3_SUFFIX~
                 }
                 else if (m_ReforgedSuffix != ReforgedSuffix.None)
                 {
@@ -4362,7 +4340,7 @@ namespace Server.Items
             #region High Seas
             else if (SearingWeapon)
             {
-                list.Add(1151318, String.Format("#{0}", LabelNumber));
+                list.Add(1151318, string.Format("#{0}", LabelNumber));
             }
             #endregion
             else if (Name == null)
@@ -4387,7 +4365,7 @@ namespace Server.Items
             * method and engraving tool, to make it perm cleaned up.
             */
 
-            if (!String.IsNullOrEmpty(m_EngravedText))
+            if (!string.IsNullOrEmpty(m_EngravedText))
             {
                 list.Add(1062613, Utility.FixHtml(m_EngravedText));
             }
@@ -4527,17 +4505,14 @@ namespace Server.Items
                 m_AosSkillBonuses.GetProperties(list);
             }
 
-            if (RequiredRace == Race.Elf)
+            if (RaceDefinitions.GetRequiredRace(this) == Race.Elf)
             {
                 list.Add(1075086); // Elves Only
             }
-
-            #region Stygian Abyss
-            else if (RequiredRace == Race.Gargoyle)
+            else if (RaceDefinitions.GetRequiredRace(this) == Race.Gargoyle)
             {
                 list.Add(1111709); // Gargoyles Only
             }
-            #endregion
 
             if (ArtifactRarity > 0)
             {
@@ -5087,7 +5062,7 @@ namespace Server.Items
 
             list.Add(1061168, "{0}\t{1}", MinDamage.ToString(), MaxDamage.ToString()); // weapon damage ~1_val~ - ~2_val~
 
-            list.Add(1061167, String.Format("{0}s", Speed)); // weapon speed ~1_val~
+            list.Add(1061167, string.Format("{0}s", Speed)); // weapon speed ~1_val~
 
             if (MaxRange > 1)
             {

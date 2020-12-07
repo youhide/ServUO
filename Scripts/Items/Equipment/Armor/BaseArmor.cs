@@ -1,11 +1,13 @@
 using Server.ContextMenus;
 using Server.Engines.Craft;
 using Server.Network;
+using Server.Misc;
+using AMA = Server.Items.ArmorMeditationAllowance;
+using AMT = Server.Items.ArmorMaterialType;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AMA = Server.Items.ArmorMeditationAllowance;
-using AMT = Server.Items.ArmorMaterialType;
 
 namespace Server.Items
 {
@@ -218,19 +220,19 @@ namespace Server.Items
                 switch (MaterialType)
                 {
                     default:
-                    case ArmorMaterialType.Cloth: return 0;
-                    case ArmorMaterialType.Spined:
-                    case ArmorMaterialType.Horned:
-                    case ArmorMaterialType.Barbed:
-                    case ArmorMaterialType.Leather: return 13;
-                    case ArmorMaterialType.Studded: return 16;
-                    case ArmorMaterialType.Ringmail: return 22;
-                    case ArmorMaterialType.Chainmail: return 28;
-                    case ArmorMaterialType.Bone: return 30;
-                    case ArmorMaterialType.Plate:
-                    case ArmorMaterialType.Dragon:
-                    case ArmorMaterialType.Wood:
-                    case ArmorMaterialType.Stone: return 40;
+                    case AMT.Cloth: return 0;
+                    case AMT.Spined:
+                    case AMT.Horned:
+                    case AMT.Barbed:
+                    case AMT.Leather: return 13;
+                    case AMT.Studded: return 16;
+                    case AMT.Ringmail: return 22;
+                    case AMT.Chainmail: return 28;
+                    case AMT.Bone: return 30;
+                    case AMT.Plate:
+                    case AMT.Dragon:
+                    case AMT.Wood:
+                    case AMT.Stone: return 40;
                 }
             }
         }
@@ -374,7 +376,7 @@ namespace Server.Items
             if (PhysicalResistance != 0 || m_RefinedPhysical != 0)
             {
                 if (m_RefinedPhysical != 0)
-                    list.Add(1153735, String.Format("{0}\t{1}\t{2}", PhysicalResistance.ToString(), "", m_RefinedPhysical.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
+                    list.Add(1153735, string.Format("{0}\t{1}\t{2}", PhysicalResistance.ToString(), "", m_RefinedPhysical.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
                 else
                     list.Add(1060448, PhysicalResistance.ToString()); // physical resist ~1_val~%
             }
@@ -382,7 +384,7 @@ namespace Server.Items
             if (FireResistance != 0 || m_RefinedFire != 0)
             {
                 if (m_RefinedFire != 0)
-                    list.Add(1153737, String.Format("{0}\t{1}\t{2}", FireResistance.ToString(), "", m_RefinedFire.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
+                    list.Add(1153737, string.Format("{0}\t{1}\t{2}", FireResistance.ToString(), "", m_RefinedFire.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
                 else
                     list.Add(1060447, FireResistance.ToString()); // physical resist ~1_val~%
             }
@@ -390,7 +392,7 @@ namespace Server.Items
             if (ColdResistance != 0 || m_RefinedCold != 0)
             {
                 if (m_RefinedCold != 0)
-                    list.Add(1153739, String.Format("{0}\t{1}\t{2}", ColdResistance.ToString(), "", m_RefinedCold.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
+                    list.Add(1153739, string.Format("{0}\t{1}\t{2}", ColdResistance.ToString(), "", m_RefinedCold.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
                 else
                     list.Add(1060445, ColdResistance.ToString()); // physical resist ~1_val~%
             }
@@ -398,7 +400,7 @@ namespace Server.Items
             if (PoisonResistance != 0 || m_RefinedPoison != 0)
             {
                 if (m_RefinedPoison != 0)
-                    list.Add(1153736, String.Format("{0}\t{1}\t{2}", PoisonResistance.ToString(), "", m_RefinedPoison.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
+                    list.Add(1153736, string.Format("{0}\t{1}\t{2}", PoisonResistance.ToString(), "", m_RefinedPoison.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
                 else
                     list.Add(1060449, PoisonResistance.ToString()); // physical resist ~1_val~%
             }
@@ -406,13 +408,13 @@ namespace Server.Items
             if (EnergyResistance != 0 || m_RefinedEnergy != 0)
             {
                 if (m_RefinedEnergy != 0)
-                    list.Add(1153738, String.Format("{0}\t{1}\t{2}", EnergyResistance.ToString(), "", m_RefinedEnergy.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
+                    list.Add(1153738, string.Format("{0}\t{1}\t{2}", EnergyResistance.ToString(), "", m_RefinedEnergy.ToString()));// physical resist ~1_val~% / ~2_symb~~3_val~% Max
                 else
                     list.Add(1060446, EnergyResistance.ToString()); // physical resist ~1_val~%
             }
 
             if (RefinedDefenseChance != 0)
-                list.Add(1153733, String.Format("{0}\t{1}", "", RefinedDefenseChance.ToString()));
+                list.Add(1153733, string.Format("{0}\t{1}", "", RefinedDefenseChance.ToString()));
         }
 
         public static int GetInherentLowerManaCost(Mobile from)
@@ -421,20 +423,20 @@ namespace Server.Items
 
             foreach (BaseArmor armor in from.Items.OfType<BaseArmor>())
             {
-                if (armor.ArmorAttributes.MageArmor > 0 || armor.MaterialType == ArmorMaterialType.Wood || armor is BaseShield)
+                if (armor.ArmorAttributes.MageArmor > 0 || armor.MaterialType == AMT.Wood || armor is BaseShield)
                     continue;
 
                 switch (armor.MaterialType)
                 {
-                    case ArmorMaterialType.Studded:
-                    case ArmorMaterialType.Bone:
-                    case ArmorMaterialType.Stone:
+                    case AMT.Studded:
+                    case AMT.Bone:
+                    case AMT.Stone:
                         toReduce += 3;
                         break;
-                    case ArmorMaterialType.Ringmail:
-                    case ArmorMaterialType.Chainmail:
-                    case ArmorMaterialType.Plate:
-                    case ArmorMaterialType.Dragon:
+                    case AMT.Ringmail:
+                    case AMT.Chainmail:
+                    case AMT.Plate:
+                    case AMT.Dragon:
                         toReduce += 1;
                         break;
                 }
@@ -465,18 +467,18 @@ namespace Server.Items
             switch (armor.MaterialType)
             {
                 default: return 0.0;
-                case ArmorMaterialType.Cloth:
-                case ArmorMaterialType.Leather:
+                case AMT.Cloth:
+                case AMT.Leather:
                     return .1;
-                case ArmorMaterialType.Wood:
-                case ArmorMaterialType.Stone:
-                case ArmorMaterialType.Studded:
-                case ArmorMaterialType.Bone:
+                case AMT.Wood:
+                case AMT.Stone:
+                case AMT.Studded:
+                case AMT.Bone:
                     return .5;
-                case ArmorMaterialType.Ringmail:
-                case ArmorMaterialType.Chainmail:
-                case ArmorMaterialType.Plate:
-                case ArmorMaterialType.Dragon:
+                case AMT.Ringmail:
+                case AMT.Chainmail:
+                case AMT.Plate:
+                case AMT.Dragon:
                     return 1.0;
             }
         }
@@ -732,10 +734,7 @@ namespace Server.Items
 
                     ApplyResourceResistances(old);
 
-                    if (CraftItem.RetainsColor(GetType()))
-                    {
-                        Hue = CraftResources.GetHue(m_Resource);
-                    }
+                    Hue = CraftResources.GetHue(m_Resource);
 
                     Invalidate();
                     InvalidateProperties();
@@ -1086,14 +1085,16 @@ namespace Server.Items
             {
                 try
                 {
-                    Item res = (Item)Activator.CreateInstance(CraftResources.GetInfo(m_Resource).ResourceTypes[0]);
+                    var type = MaterialType == AMT.Cloth ? typeof(Cloth) : CraftResources.GetInfo(m_Resource).ResourceTypes[0];
+
+                    Item res = (Item)Activator.CreateInstance(type);
 
                     ScissorHelper(from, res, m_PlayerConstructed ? (item.Resources.GetAt(0).Amount / 2) : 1);
                     return true;
                 }
                 catch (Exception e)
                 {
-                    Server.Diagnostics.ExceptionLogging.LogException(e);
+                    Diagnostics.ExceptionLogging.LogException(e);
                 }
             }
 
@@ -1128,26 +1129,14 @@ namespace Server.Items
                 {
                     BaseArmor armor = (BaseArmor)item;
 
-                    if (m.Race == Race.Gargoyle && !armor.CanBeWornByGargoyles)
+                    if (!RaceDefinitions.ValidateEquipment(m, item))
                     {
-                        m.SendLocalizedMessage(1111708); // Gargoyles can't wear 
-                        m.AddToBackpack(armor);
-                    }
-                    if (armor.RequiredRace != null && m.Race != armor.RequiredRace)
-                    {
-                        if (armor.RequiredRace == Race.Elf)
-                            m.SendLocalizedMessage(1072203); // Only Elves may use 
-                        else if (armor.RequiredRace == Race.Gargoyle)
-                            m.SendLocalizedMessage(1111707); // Only gargoyles can wear 
-                        else
-                            m.SendMessage("Only {0} may use this.", armor.RequiredRace.PluralName);
-
                         m.AddToBackpack(armor);
                     }
                     else if (!armor.AllowMaleWearer && !m.Female && m.AccessLevel < AccessLevel.GameMaster)
                     {
                         if (armor.AllowFemaleWearer)
-                            m.SendLocalizedMessage(1010388); // Only females can wear 
+                            m.SendLocalizedMessage(1010388); // Only females can wear this.
                         else
                             m.SendMessage("You may not wear this.");
 
@@ -1156,7 +1145,7 @@ namespace Server.Items
                     else if (!armor.AllowFemaleWearer && m.Female && m.AccessLevel < AccessLevel.GameMaster)
                     {
                         if (armor.AllowMaleWearer)
-                            m.SendLocalizedMessage(1063343); // Only males can wear 
+                            m.SendLocalizedMessage(1063343); // Only males can wear this.
                         else
                             m.SendMessage("You may not wear this.");
 
@@ -1422,7 +1411,7 @@ namespace Server.Items
             SaveFlag flags = SaveFlag.None;
 
             SetSaveFlag(ref flags, SaveFlag.xWeaponAttributes, !m_AosWeaponAttributes.IsEmpty);
-            SetSaveFlag(ref flags, SaveFlag.EngravedText, !String.IsNullOrEmpty(_EngravedText));
+            SetSaveFlag(ref flags, SaveFlag.EngravedText, !string.IsNullOrEmpty(_EngravedText));
             SetSaveFlag(ref flags, SaveFlag.TalismanProtection, !m_TalismanProtection.IsEmpty);
             SetSaveFlag(ref flags, SaveFlag.NegativeAttributes, !m_NegativeAttributes.IsEmpty);
             SetSaveFlag(ref flags, SaveFlag.Attributes, !m_AosAttributes.IsEmpty);
@@ -1862,10 +1851,6 @@ namespace Server.Items
             m_TalismanProtection = new TalismanAttribute();
         }
 
-        public virtual Race RequiredRace => null;
-
-        public virtual bool CanBeWornByGargoyles => false;
-
         public override bool CanEquip(Mobile from)
         {
             if (from.IsPlayer())
@@ -1893,22 +1878,8 @@ namespace Server.Items
                     return false;
                 }
 
-                bool morph = from.FindItemOnLayer(Layer.Earrings) is MorphEarrings;
-
-                if (from.Race == Race.Gargoyle && !CanBeWornByGargoyles)
+                if (!RaceDefinitions.ValidateEquipment(from, this))
                 {
-                    from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111708); // Gargoyles can't wear this.
-                    return false;
-                }
-                if (RequiredRace != null && from.Race != RequiredRace && !morph)
-                {
-                    if (RequiredRace == Race.Elf)
-                        from.SendLocalizedMessage(1072203); // Only Elves may use this.
-                    else if (RequiredRace == Race.Gargoyle)
-                        from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111707); // Only gargoyles can wear this.
-                    else
-                        from.SendMessage("Only {0} may use this.", RequiredRace.PluralName);
-
                     return false;
                 }
                 else if (!AllowMaleWearer && !from.Female)
@@ -2099,7 +2070,7 @@ namespace Server.Items
             string name = Name;
 
             if (name == null)
-                name = String.Format("#{0}", LabelNumber);
+                name = string.Format("#{0}", LabelNumber);
 
             return name;
         }
@@ -2157,9 +2128,9 @@ namespace Server.Items
                     int prefix = RunicReforging.GetPrefixName(m_ReforgedPrefix);
 
                     if (m_ReforgedSuffix == ReforgedSuffix.None)
-                        list.Add(1151757, String.Format("#{0}\t{1}", prefix, GetNameString())); // ~1_PREFIX~ ~2_ITEM~
+                        list.Add(1151757, string.Format("#{0}\t{1}", prefix, GetNameString())); // ~1_PREFIX~ ~2_ITEM~
                     else
-                        list.Add(1151756, String.Format("#{0}\t{1}\t#{2}", prefix, GetNameString(), RunicReforging.GetSuffixName(m_ReforgedSuffix))); // ~1_PREFIX~ ~2_ITEM~ of ~3_SUFFIX~
+                        list.Add(1151756, string.Format("#{0}\t{1}\t#{2}", prefix, GetNameString(), RunicReforging.GetSuffixName(m_ReforgedSuffix))); // ~1_PREFIX~ ~2_ITEM~ of ~3_SUFFIX~
                 }
                 else if (m_ReforgedSuffix != ReforgedSuffix.None)
                 {
@@ -2176,7 +2147,7 @@ namespace Server.Items
                     list.Add(Name);
             }
 
-            if (!String.IsNullOrEmpty(_EngravedText))
+            if (!string.IsNullOrEmpty(_EngravedText))
             {
                 list.Add(1062613, Utility.FixHtml(_EngravedText));
             }
@@ -2263,10 +2234,14 @@ namespace Server.Items
 
             AddDamageTypeProperty(list);
 
-            if (RequiredRace == Race.Elf)
+            if (RaceDefinitions.GetRequiredRace(this) == Race.Elf)
+            {
                 list.Add(1075086); // Elves Only
-            else if (RequiredRace == Race.Gargoyle)
+            }
+            else if (RaceDefinitions.GetRequiredRace(this) == Race.Gargoyle)
+            {
                 list.Add(1111709); // Gargoyles Only
+            }
 
             if (this is SurgeShield && ((SurgeShield)this).Surge > SurgeType.None)
                 list.Add(1116176 + ((int)((SurgeShield)this).Surge));
@@ -2500,7 +2475,7 @@ namespace Server.Items
             if (makersMark)
                 Crafter = from;
 
-            if (!craftItem.ForceNonExceptional)
+            if (!craftItem.ForceNonExceptional && MaterialType > AMT.Cloth)
             {
                 if (typeRes == null)
                     typeRes = craftItem.Resources.GetAt(0).ItemType;
@@ -2515,7 +2490,7 @@ namespace Server.Items
 
             if (Quality == ItemQuality.Exceptional && !craftItem.ForceNonExceptional)
             {
-                DistributeExceptionalBonuses(from, (tool is BaseRunicTool ? 6 : 15)); // Not sure since when, but right now 15 points are added, not 14.
+                DistributeExceptionalBonuses(from, tool is BaseRunicTool); // Not sure since when, but right now 15 points are added, not 14.
             }
 
             if (tool is BaseRunicTool && !craftItem.ForceNonExceptional)
@@ -2539,36 +2514,42 @@ namespace Server.Items
             return quality;
         }
 
-        public virtual void DistributeExceptionalBonuses(Mobile from, int amount)
+        public virtual void DistributeExceptionalBonuses(Mobile from, bool runic)
         {
-            // Exceptional Bonus
-            for (int i = 0; i < amount; ++i)
+            var anvilEntry = CraftContext.GetAnvilEntry(from, false);
+
+            if (anvilEntry != null && anvilEntry.Ready)
             {
-                switch (Utility.Random(5))
+                var table = runic ? anvilEntry.Runic : anvilEntry.Exceptional;
+
+                foreach (var kvp in table)
                 {
-                    case 0: ++m_PhysicalBonus; break;
-                    case 1: ++m_FireBonus; break;
-                    case 2: ++m_ColdBonus; break;
-                    case 3: ++m_PoisonBonus; break;
-                    case 4: ++m_EnergyBonus; break;
+                    switch (kvp.Key)
+                    {
+                        case ResistanceType.Physical: m_PhysicalBonus += kvp.Value; break;
+                        case ResistanceType.Fire: m_FireBonus += kvp.Value; break;
+                        case ResistanceType.Cold: m_ColdBonus += kvp.Value; break;
+                        case ResistanceType.Poison: m_PoisonBonus += kvp.Value; break;
+                        case ResistanceType.Energy: m_EnergyBonus += kvp.Value; break;
+                    }
                 }
+
+                anvilEntry.Clear(from);
             }
-
-            // Arms Lore Bonus
-            if (from != null)
+            else
             {
-                double div = Siege.SiegeShard ? 12.5 : 20;
-                int bonus = (int)(from.Skills.ArmsLore.Value / div);
+                int amount = GetResistBonus(from, runic);
 
-                for (int i = 0; i < bonus; i++)
+                // Exceptional Bonus
+                for (int i = 0; i < amount; ++i)
                 {
                     switch (Utility.Random(5))
                     {
-                        case 0: m_PhysicalBonus++; break;
-                        case 1: m_FireBonus++; break;
-                        case 2: m_ColdBonus++; break;
-                        case 3: m_EnergyBonus++; break;
-                        case 4: m_PoisonBonus++; break;
+                        case 0: ++m_PhysicalBonus; break;
+                        case 1: ++m_FireBonus; break;
+                        case 2: ++m_ColdBonus; break;
+                        case 3: ++m_PoisonBonus; break;
+                        case 4: ++m_EnergyBonus; break;
                     }
                 }
 
@@ -2589,6 +2570,13 @@ namespace Server.Items
             }
 
             InvalidateProperties();
+        }
+
+        private int GetResistBonus(Mobile from, bool runic)
+        {
+            int amount = runic ? 6 : 15;
+
+            return Siege.SiegeShard ? amount + (int)(from.Skills[SkillName.ArmsLore].Value / 12.5) : amount + (int)(from.Skills[SkillName.ArmsLore].Value / 20.0);
         }
 
         protected virtual void ApplyResourceResistances(CraftResource oldResource)

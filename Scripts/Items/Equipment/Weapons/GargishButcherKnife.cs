@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x48B6, 0x48B7)]
+    [Flipable(0x48B6, 0x48B7)]
     public class GargishButcherKnife : BaseKnife
     {
         [Constructable]
@@ -24,9 +24,6 @@ namespace Server.Items
 
         public override int InitMinHits => 31;
         public override int InitMaxHits => 40;
-
-        public override Race RequiredRace => Race.Gargoyle;
-        public override bool CanBeWornByGargoyles => true;
 
         public override void Serialize(GenericWriter writer)
         {

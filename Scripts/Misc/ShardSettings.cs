@@ -1,14 +1,13 @@
 #region References
 using Server.Accounting;
 using Server.Services.TownCryer;
-using System;
 #endregion
 
 namespace Server
 {
     public static class ShardSettings
     {
-        [CallPriority(Int32.MinValue)]
+        [CallPriority(int.MinValue)]
         public static void Configure()
         {
             AccountGold.Enabled = true;
@@ -23,7 +22,6 @@ namespace Server
 
             AOS.DisableStatInfluences();
 
-            Mobile.ActionDelay = 500;
             Mobile.AOSStatusHandler = AOS.GetStatus;
         }
     }

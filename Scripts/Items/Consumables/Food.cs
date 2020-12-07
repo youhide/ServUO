@@ -7,24 +7,11 @@ namespace Server.Items
 {
     public abstract class Food : Item, IEngravable, IQuality
     {
-        private Mobile m_Poisoner;
-        private Poison m_Poison;
-        private int m_FillFactor;
         private bool m_PlayerConstructed;
         private ItemQuality _Quality;
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public Mobile Poisoner
-        {
-            get
-            {
-                return m_Poisoner;
-            }
-            set
-            {
-                m_Poisoner = value;
-            }
-        }
+        public Mobile Poisoner { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool PlayerConstructed
@@ -41,30 +28,10 @@ namespace Server.Items
         }
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public Poison Poison
-        {
-            get
-            {
-                return m_Poison;
-            }
-            set
-            {
-                m_Poison = value;
-            }
-        }
+        public Poison Poison { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public int FillFactor
-        {
-            get
-            {
-                return m_FillFactor;
-            }
-            set
-            {
-                m_FillFactor = value;
-            }
-        }
+        public int FillFactor { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public virtual ItemQuality Quality { get { return _Quality; } set { _Quality = value; InvalidateProperties(); } }
@@ -96,7 +63,7 @@ namespace Server.Items
         {
             Stackable = true;
             Amount = amount;
-            m_FillFactor = 1;
+            FillFactor = 1;
         }
 
         public Food(Serial serial)
@@ -112,8 +79,8 @@ namespace Server.Items
                 return;
 
             food.PlayerConstructed = m_PlayerConstructed;
-            food.Poisoner = m_Poisoner;
-            food.Poison = m_Poison;
+            food.Poisoner = Poisoner;
+            food.Poison = Poison;
             food.Quality = _Quality;
 
             base.OnAfterDuped(newItem);
@@ -163,14 +130,14 @@ namespace Server.Items
 
         public override bool WillStack(Mobile from, Item dropped)
         {
-            return dropped is Food && ((Food)dropped).PlayerConstructed == PlayerConstructed && base.WillStack(from, dropped);
+            return dropped is Food && ((Food)dropped).PlayerConstructed == PlayerConstructed && ((Food)dropped).Quality == Quality && base.WillStack(from, dropped);
         }
 
         public override void AddNameProperty(ObjectPropertyList list)
         {
             base.AddNameProperty(list);
 
-            if (!String.IsNullOrEmpty(EngravedText))
+            if (!string.IsNullOrEmpty(EngravedText))
             {
                 list.Add(1072305, Utility.FixHtml(EngravedText)); // Engraved: ~1_INSCRIPTION~
             }
@@ -189,8 +156,8 @@ namespace Server.Items
                     from.Animate(AnimationType.Eat, 0);
                 }
 
-                if (m_Poison != null)
-                    from.ApplyPoison(m_Poisoner, m_Poison);
+                if (Poison != null)
+                    from.ApplyPoison(Poisoner, Poison);
 
                 Consume();
 
@@ -204,7 +171,7 @@ namespace Server.Items
 
         public virtual bool CheckHunger(Mobile from)
         {
-            return FillHunger(from, m_FillFactor);
+            return FillHunger(from, FillFactor);
         }
 
         public static bool FillHunger(Mobile from, int fillFactor)
@@ -253,10 +220,10 @@ namespace Server.Items
             writer.Write(m_EngravedText);
 
             writer.Write(m_PlayerConstructed);
-            writer.Write(m_Poisoner);
+            writer.Write(Poisoner);
 
-            Poison.Serialize(m_Poison, writer);
-            writer.Write(m_FillFactor);
+            Poison.Serialize(Poison, writer);
+            writer.Write(FillFactor);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -272,19 +239,19 @@ namespace Server.Items
                         switch (reader.ReadInt())
                         {
                             case 0:
-                                m_Poison = null;
+                                Poison = null;
                                 break;
                             case 1:
-                                m_Poison = Poison.Lesser;
+                                Poison = Poison.Lesser;
                                 break;
                             case 2:
-                                m_Poison = Poison.Regular;
+                                Poison = Poison.Regular;
                                 break;
                             case 3:
-                                m_Poison = Poison.Greater;
+                                Poison = Poison.Greater;
                                 break;
                             case 4:
-                                m_Poison = Poison.Deadly;
+                                Poison = Poison.Deadly;
                                 break;
                         }
 
@@ -292,18 +259,18 @@ namespace Server.Items
                     }
                 case 2:
                     {
-                        m_Poison = Poison.Deserialize(reader);
+                        Poison = Poison.Deserialize(reader);
                         break;
                     }
                 case 3:
                     {
-                        m_Poison = Poison.Deserialize(reader);
-                        m_FillFactor = reader.ReadInt();
+                        Poison = Poison.Deserialize(reader);
+                        FillFactor = reader.ReadInt();
                         break;
                     }
                 case 4:
                     {
-                        m_Poisoner = reader.ReadMobile();
+                        Poisoner = reader.ReadMobile();
                         goto case 3;
                     }
                 case 5:
@@ -1307,7 +1274,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0xC74, 0xC75)]
+    [Flipable(0xC74, 0xC75)]
     public class HoneydewMelon : Food
     {
         [Constructable]
@@ -1344,7 +1311,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0xC64, 0xC65)]
+    [Flipable(0xC64, 0xC65)]
     public class YellowGourd : Food
     {
         [Constructable]
@@ -1381,7 +1348,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0xC66, 0xC67)]
+    [Flipable(0xC66, 0xC67)]
     public class GreenGourd : Food
     {
         [Constructable]
@@ -1418,7 +1385,7 @@ namespace Server.Items
         }
     }
 
-    [FlipableAttribute(0xC7F, 0xC81)]
+    [Flipable(0xC7F, 0xC81)]
     public class EarOfCorn : Food
     {
         [Constructable]
@@ -1564,8 +1531,10 @@ namespace Server.Items
         {
             if (IsChildOf(from.Backpack))
             {
-                Cake cake = new Cake();
-                cake.ItemID = 0x4BA4;
+                Cake cake = new Cake
+                {
+                    ItemID = 0x4BA4
+                };
 
                 from.PrivateOverheadMessage(Network.MessageType.Regular, 1154, 1157341, from.NetState); // *You cut a slice from the cake.*
                 from.AddToBackpack(cake);
@@ -1777,6 +1746,99 @@ namespace Server.Items
         {
             base.Deserialize(reader);
             int version = reader.ReadInt();
+
+        }
+    }
+
+    public class GrilledSerpentSteak : Food
+    {
+        public override int LabelNumber => 1159197; // grilled serpent steak
+
+        [Constructable]
+        public GrilledSerpentSteak()
+            : base(1, 0xA422)
+        {
+            FillFactor = 3;
+            Stackable = false;
+        }
+
+        public GrilledSerpentSteak(Serial serial)
+            : base(serial)
+        {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            reader.ReadInt();
+
+        }
+    }
+
+    public class BBQDinoRibs : Food
+    {
+        public override int LabelNumber => 1159198; // BBQ dino ribs
+
+        [Constructable]
+        public BBQDinoRibs()
+            : base(1, 0xA426)
+        {
+            FillFactor = 3;
+            Stackable = false;
+        }
+
+        public BBQDinoRibs(Serial serial)
+            : base(serial)
+        {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            reader.ReadInt();
+
+        }
+    }
+
+    public class WakuChicken : Food
+    {
+        public override int LabelNumber => 1159199; // waku chicken
+
+        [Constructable]
+        public WakuChicken()
+            : base(1, 0x9B7)
+        {
+            FillFactor = 3;
+            Stackable = false;
+        }
+
+        public WakuChicken(Serial serial)
+            : base(serial)
+        {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            reader.ReadInt();
 
         }
     }

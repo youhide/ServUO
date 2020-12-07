@@ -101,17 +101,6 @@ namespace Server.Engines.Craft
             DrawSkill();
             DrawResource();
 
-            if (craftItem.RequiredExpansion != Expansion.None)
-            {
-                bool supportsEx = (from.NetState != null && from.NetState.SupportsExpansion(craftItem.RequiredExpansion));
-                TextDefinition.AddHtmlText(this, 170, 302 + (m_OtherCount++ * 20), 310, 18, RequiredExpansionMessage(craftItem.RequiredExpansion), false, false, supportsEx ? LabelColor : RedLabelColor, supportsEx ? LabelHue : RedLabelHue);
-            }
-
-            if (craftItem.RequiredThemePack != ThemePack.None)
-            {
-                TextDefinition.AddHtmlText(this, 170, 302 + (m_OtherCount++ * 20), 310, 18, RequiredThemePackMessage(craftItem.RequiredThemePack), false, false, LabelColor, LabelHue);
-            }
-
             if (needsRecipe)
                 AddHtmlLocalized(170, 302 + (m_OtherCount++ * 20), 310, 18, 1073620, RedLabelColor, false, false); // You have not learned this recipe.
         }
@@ -175,40 +164,6 @@ namespace Server.Engines.Craft
         #endregion
 
         #region Methods
-        private TextDefinition RequiredExpansionMessage(Expansion expansion)
-        {
-            switch (expansion)
-            {
-                case Expansion.SE:
-                    return 1063363; // * Requires the "Samurai Empire" expansion
-                case Expansion.ML:
-                    return 1072651; // * Requires the "Mondain's Legacy" expansion
-                case Expansion.SA:
-                    return 1094732; // * Requires the "Stygian Abyss" expansion
-                case Expansion.HS:
-                    return 1116296; // * Requires the "High Seas" booster
-                case Expansion.TOL:
-                    return 1155876; // * Requires the "Time of Legends" expansion.
-                default:
-                    return String.Format("* Requires the \"{0}\" expansion", ExpansionInfo.GetInfo(expansion).Name);
-            }
-        }
-
-        private TextDefinition RequiredThemePackMessage(ThemePack pack)
-        {
-            switch (pack)
-            {
-                case ThemePack.Kings:
-                    return 1154195; // *Requires the "King's Collection" theme pack
-                case ThemePack.Rustic:
-                    return 1150651; // * Requires the "Rustic" theme pack
-                case ThemePack.Gothic:
-                    return 1150650; // * Requires the "Gothic" theme pack
-                default:
-                    return String.Format("Requires the \"{0}\" theme pack.", null);
-            }
-        }
-
         public void DrawItem()
         {
             Type type = m_CraftItem.ItemType;
@@ -239,7 +194,7 @@ namespace Server.Engines.Craft
                     minSkill = 0;
 
                 AddHtmlLocalized(170, 132 + (i * 20), 200, 18, AosSkillBonuses.GetLabel(skill.SkillToMake), LabelColor, false, false);
-                AddLabel(430, 132 + (i * 20), LabelHue, String.Format("{0:F1}", minSkill));
+                AddLabel(430, 132 + (i * 20), LabelHue, string.Format("{0:F1}", minSkill));
             }
 
             CraftSubResCol res = (m_CraftItem.UseSubRes2 ? m_CraftSystem.CraftSubRes2 : m_CraftSystem.CraftSubRes);
@@ -260,7 +215,7 @@ namespace Server.Engines.Craft
                 chance = 1.0;
 
             AddHtmlLocalized(170, 80, 250, 18, 1044057, LabelColor, false, false); // Success Chance:
-            AddLabel(430, 80, LabelHue, String.Format("{0:F1}%", chance * 100));
+            AddLabel(430, 80, LabelHue, string.Format("{0:F1}%", chance * 100));
 
             if (m_ShowExceptionalChance)
             {
@@ -270,7 +225,7 @@ namespace Server.Engines.Craft
                     excepChance = 1.0;
 
                 AddHtmlLocalized(170, 100, 250, 18, 1044058, 32767, false, false); // Exceptional Chance:
-                AddLabel(430, 100, LabelHue, String.Format("{0:F1}%", excepChance * 100));
+                AddLabel(430, 100, LabelHue, string.Format("{0:F1}%", excepChance * 100));
             }
         }
 
@@ -289,6 +244,8 @@ namespace Server.Engines.Craft
             bool cropScroll = (m_CraftItem.Resources.Count > 1) &&
                               m_CraftItem.Resources.GetAt(m_CraftItem.Resources.Count - 1).ItemType == typeofBlankScroll &&
                               typeofSpellScroll.IsAssignableFrom(m_CraftItem.ItemType);
+
+            bool anvilOfArtifactCraft = m_CraftItem.IsAnvilOfArtifactValid(m_From, m_CraftSystem);
 
             for (int i = 0; i < m_CraftItem.Resources.Count - (cropScroll ? 1 : 0) && i < 4; i++)
             {
@@ -329,7 +286,14 @@ namespace Server.Engines.Craft
                 else
                     AddLabel(170, 219 + (i * 20), LabelHue, nameString);
 
-                AddLabel(430, 219 + (i * 20), LabelHue, craftResource.Amount.ToString());
+                var amount = craftResource.Amount;
+
+                if (anvilOfArtifactCraft)
+                {
+                    amount *= 10;
+                }
+
+                AddLabel(430, 219 + (i * 20), LabelHue, amount.ToString());
             }
 
             if (m_CraftItem.NameNumber == 1041267) // runebook

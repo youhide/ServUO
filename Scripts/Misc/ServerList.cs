@@ -90,9 +90,8 @@ namespace Server.Misc
 
                 e.AddServer(ServerName, new IPEndPoint(localAddress, localPort));
             }
-            catch (Exception ex)
+            catch
             {
-                Server.Diagnostics.ExceptionLogging.LogException(ex);
                 e.Rejected = true;
             }
         }
@@ -145,7 +144,7 @@ namespace Server.Misc
             }
             catch(Exception e)
             {
-                Server.Diagnostics.ExceptionLogging.LogException(e);
+                Diagnostics.ExceptionLogging.LogException(e);
             }
         }
 
@@ -219,7 +218,7 @@ namespace Server.Misc
             string data;
             Match match;
 
-            foreach (string service in services.Where(s => !String.IsNullOrWhiteSpace(s)))
+            foreach (string service in services.Where(s => !string.IsNullOrWhiteSpace(s)))
             {
                 try
                 {

@@ -1,6 +1,6 @@
 namespace Server.Items
 {
-    [FlipableAttribute(0x4228, 0x4229)]
+    [Flipable(0x4228, 0x4229)]
     public class GargishChaosShield : BaseShield
     {
         public override int BasePhysicalResistance => 1;
@@ -11,8 +11,6 @@ namespace Server.Items
         public override int InitMinHits => 100;
         public override int InitMaxHits => 125;
         public override int StrReq => 95;
-        public override bool CanBeWornByGargoyles => true;
-        public override Race RequiredRace => Race.Gargoyle;
 
         [Constructable]
         public GargishChaosShield()

@@ -75,17 +75,12 @@ namespace Server.Mobiles
 
         public override void OnMovement(Mobile m, Point3D oldLocation)
         {
-            if (m.Alive && !m.Hidden && m is PlayerMobile)
+            if (m.Alive && !m.Hidden && m is PlayerMobile && InLOS(m) && InRange(m, 8) && !InRange(oldLocation, 8) && DateTime.UtcNow >= _NextTalk)
             {
-                PlayerMobile pm = (PlayerMobile)m;
-
-                if (InLOS(m) && InRange(m, 8) && !InRange(oldLocation, 8) && DateTime.UtcNow >= _NextTalk)
-                {
-                    if (Utility.Random(100) < 50)
+                if (Utility.Random(100) < 50)
                         Say(1157526); // Such an exciting time to be an Animal Trainer! New taming techniques have been discovered!
 
-                    _NextTalk = DateTime.UtcNow + TimeSpan.FromSeconds(15);
-                }
+                _NextTalk = DateTime.UtcNow + TimeSpan.FromSeconds(15);
             }
         }
 
@@ -120,19 +115,19 @@ namespace Server.Mobiles
 
                         return true;
                     }
-                    else
-                    {
-                        player.SendGump(new MondainQuestGump(quest, MondainQuestGump.Section.InProgress, false));
-                        quest.InProgress();
-                    }
+
+                    player.SendGump(new MondainQuestGump(quest, MondainQuestGump.Section.InProgress, false));
+                    quest.InProgress();
 
                     return false;
                 }
             }
 
-            BaseQuest questt = new TamingPetQuest();
-            questt.Owner = player;
-            questt.Quester = this;
+            BaseQuest questt = new TamingPetQuest
+            {
+                Owner = player,
+                Quester = this
+            };
             player.CloseGump(typeof(MondainQuestGump));
             player.SendGump(new MondainQuestGump(questt));
 
@@ -182,7 +177,7 @@ namespace Server.Mobiles
                 max += (int)((vetern - 90.0) / 10);
             }
 
-            return max + Server.Spells.SkillMasteries.MasteryInfo.BoardingSlotIncrease(from);
+            return max + Spells.SkillMasteries.MasteryInfo.BoardingSlotIncrease(from);
         }
 
         private void CloseClaimList(Mobile from)
@@ -265,12 +260,6 @@ namespace Server.Mobiles
                 return;
             }
 
-            if ((from.Backpack == null || from.Backpack.GetAmount(typeof(Gold)) < 30) && Banker.GetBalance(from) < 30)
-            {
-                SayTo(from, 1042556); // Thou dost not have enough gold, not even in thy bank account.
-                return;
-            }
-
             /* 
 			 * I charge 30 gold per pet for a real week's stable time.
 			 * I will withdraw it from thy bank account.
@@ -312,8 +301,7 @@ namespace Server.Mobiles
             {
                 SayTo(from, 1048053); // You can't stable that!
             }
-            else if ((pet is PackLlama || pet is PackHorse || pet is Beetle) &&
-                     (pet.Backpack != null && pet.Backpack.Items.Count > 0))
+            else if ((pet is PackLlama || pet is PackHorse || pet is Beetle) && pet.Backpack != null && pet.Backpack.Items.Count > 0)
             {
                 SayTo(from, 1042563); // You need to unload your pet.
             }
@@ -325,7 +313,7 @@ namespace Server.Mobiles
             {
                 SayTo(from, 1042565); // You have too many pets in the stables!
             }
-            else if ((from.Backpack != null && from.Backpack.ConsumeTotal(typeof(Gold), 30)) || Banker.Withdraw(from, 30))
+            else
             {
                 pet.ControlTarget = null;
                 pet.ControlOrder = OrderType.Stay;
@@ -342,10 +330,6 @@ namespace Server.Mobiles
                 from.Stabled.Add(pet);
 
                 SayTo(from, 1049677); // Your pet has been stabled.
-            }
-            else
-            {
-                SayTo(from, 502677); // But thou hast not the funds in thy bank account!
             }
         }
 
@@ -426,7 +410,7 @@ namespace Server.Mobiles
 
         public bool CanClaim(Mobile from, BaseCreature pet)
         {
-            return ((from.Followers + pet.ControlSlots) <= from.FollowersMax);
+            return from.Followers + pet.ControlSlots <= from.FollowersMax;
         }
 
         private void DoClaim(Mobile from, BaseCreature pet)
@@ -494,7 +478,7 @@ namespace Server.Mobiles
                 {
                     if (m is AnimalTrainer)
                     {
-                        e.Mobile.SendLocalizedMessage(1071250, String.Format("{0}\t{1}", e.Mobile.Stabled.Count.ToString(), GetMaxStabled(e.Mobile).ToString())); // ~1_USED~/~2_MAX~ stable stalls used.
+                        e.Mobile.SendLocalizedMessage(1071250, string.Format("{0}\t{1}", e.Mobile.Stabled.Count.ToString(), GetMaxStabled(e.Mobile).ToString())); // ~1_USED~/~2_MAX~ stable stalls used.
                         break;
                     }
                 }
@@ -585,7 +569,7 @@ namespace Server.Mobiles
                         35 + (i * 20),
                         275,
                         18,
-                        String.Format("<BASEFONT COLOR=#C6C6EF>{0}</BASEFONT>", pet.Name),
+                        string.Format("<BASEFONT COLOR=#C6C6EF>{0}</BASEFONT>", pet.Name),
                         false,
                         false);
                 }

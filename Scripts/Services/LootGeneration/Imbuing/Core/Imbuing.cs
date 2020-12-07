@@ -114,7 +114,7 @@ namespace Server.SkillHandlers
 
         public static bool OnBeforeImbue(Mobile from, Item item, int id, int value)
         {
-            return OnBeforeImbue(from, item, id, value, GetTotalMods(item, id), GetMaxProps(item), GetTotalWeight(item, id, false, true), Imbuing.GetMaxWeight(item));
+            return OnBeforeImbue(from, item, id, value, GetTotalMods(item, id), GetMaxProps(item), GetTotalWeight(item, id, false, true), GetMaxWeight(item));
         }
 
         public static bool OnBeforeImbue(Mobile from, Item item, int id, int value, int totalprops, int maxprops, int totalitemweight, int maxweight)
@@ -192,12 +192,12 @@ namespace Server.SkillHandlers
             return true;
         }
 
-        private static bool IsSpecialImbuable(Item item)
+        public static bool IsSpecialImbuable(Item item)
         {
             return IsSpecialImbuable(item.GetType());
         }
 
-        private static bool IsSpecialImbuable(Type type)
+        public static bool IsSpecialImbuable(Type type)
         {
             if (_SpecialImbuable.Any(i => i == type))
                 return true;
@@ -215,7 +215,7 @@ namespace Server.SkillHandlers
             typeof(VirtuososNecklace), typeof(VirtuososTunic), typeof(BestialArms), typeof(BestialEarrings), typeof(BestialGloves), typeof(BestialGorget),
             typeof(BestialHelm), typeof(BestialKilt), typeof(BestialLegs), typeof(BestialNecklace), typeof(BarbedWhip), typeof(BladedWhip),
             typeof(SpikedWhip), typeof(SkullGnarledStaff), typeof(GargishSkullGnarledStaff), typeof(SkullLongsword), typeof(GargishSkullLongsword), typeof(JukaBow),
-            typeof(SlayerLongbow)
+            typeof(SlayerLongbow), typeof(JackOLanternHelm)
         };
 
         private static readonly Type[] _NonCraftables =
@@ -306,7 +306,7 @@ namespace Server.SkillHandlers
             if (!CheckSoulForge(from, 2, out bonus))
                 return;
 
-            ImbuingContext context = Imbuing.GetContext(from);
+            ImbuingContext context = GetContext(from);
 
             context.LastImbued = i;
             context.Imbue_Mod = id;
@@ -365,7 +365,7 @@ namespace Server.SkillHandlers
 
                 success /= 100;
 
-                Effects.SendPacket(from, from.Map, new GraphicalEffect(EffectType.FixedFrom, from.Serial, Server.Serial.Zero, 0x375A, from.Location, from.Location, 1, 17, true, false));
+                Effects.SendPacket(from, from.Map, new GraphicalEffect(EffectType.FixedFrom, from.Serial, Serial.Zero, 0x375A, from.Location, from.Location, 1, 17, true, false));
                 Effects.SendTargetParticles(from, 0, 1, 0, 0x1593, EffectLayer.Waist);
 
                 if (success >= Utility.RandomDouble() || id < 0 || id > 180)
@@ -956,7 +956,7 @@ namespace Server.SkillHandlers
             {
                 int ids = GetTotalMods((Item)targeted);
 
-                ((Item)targeted).LabelTo(from, String.Format("Total Mods: {0}", ids.ToString()));
+                ((Item)targeted).LabelTo(from, string.Format("Total Mods: {0}", ids.ToString()));
             }
             else
                 from.SendMessage("That is not an item!");
@@ -1301,11 +1301,11 @@ namespace Server.SkillHandlers
             if (targeted is Item)
             {
                 int w = GetTotalWeight((Item)targeted, -1, false, true);
-                ((Item)targeted).LabelTo(from, String.Format("Imbuing Weight: {0}", w.ToString()));
+                ((Item)targeted).LabelTo(from, string.Format("Imbuing Weight: {0}", w.ToString()));
                 w = GetTotalWeight((Item)targeted, -1, false, false);
-                ((Item)targeted).LabelTo(from, String.Format("Loot Weight: {0}", w.ToString()));
+                ((Item)targeted).LabelTo(from, string.Format("Loot Weight: {0}", w.ToString()));
                 w = GetTotalWeight((Item)targeted, -1, true, true);
-                ((Item)targeted).LabelTo(from, String.Format("True Weight: {0}", w.ToString()));
+                ((Item)targeted).LabelTo(from, string.Format("True Weight: {0}", w.ToString()));
             }
             else
                 from.SendMessage("That is not an item!");
@@ -1693,7 +1693,7 @@ namespace Server.SkillHandlers
             PlayerMobile m = from as PlayerMobile;
             bonus = 0.0;
 
-            ImbuingContext context = Imbuing.GetContext(m);
+            ImbuingContext context = GetContext(m);
             Map map = from.Map;
 
             if (map == null)
@@ -1726,7 +1726,7 @@ namespace Server.SkillHandlers
             {
                 if (from.Region != null && from.Region.IsPartOf("Queen's Palace"))
                 {
-                    if (!Server.Engines.Points.PointsSystem.QueensLoyalty.IsNoble(from))
+                    if (!Engines.Points.PointsSystem.QueensLoyalty.IsNoble(from))
                     {
                         if (message)
                         {
@@ -2006,6 +2006,11 @@ namespace Server.SkillHandlers
             if (value <= 0 && id != 16)
             {
                 return 0;
+            }
+
+            if (id == 61 && !(item is BaseRanged))
+            {
+                id = 63;
             }
 
             if ((item is BaseWeapon || item is BaseShield) && id == 16)

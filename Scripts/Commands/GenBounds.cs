@@ -15,7 +15,7 @@ namespace Server.Bounds
         [Description("GenBounds")]
         public static void GenBounds_OnCommand(CommandEventArgs e)
         {
-            if (Ultima.Files.MulPath["artlegacymul.uop"] != null || (Ultima.Files.MulPath["art.mul"] != null && Ultima.Files.MulPath["artidx.mul"] != null))
+            try
             {
                 Utility.PushColor(ConsoleColor.Yellow);
                 Console.Write("Generating Bounds.bin...");
@@ -25,26 +25,28 @@ namespace Server.Bounds
 
                 BinaryWriter bin = new BinaryWriter(fs);
 
-                int xMin, yMin, xMax, yMax;
-
-                for (int i = 0; i < Ultima.Art.GetMaxItemID(); ++i)
+                for (int i = 0; i < ArtData.GetMaxItemID(); ++i)
                 {
-                    Ultima.Art.Measure(Item.GetBitmap(i), out xMin, out yMin, out xMax, out yMax);
+                    ArtData.Measure(Item.GetBitmap(i), out int xMin, out int yMin, out int xMax, out int yMax);
 
                     bin.Write((ushort)xMin);
                     bin.Write((ushort)yMin);
                     bin.Write((ushort)xMax);
                     bin.Write((ushort)yMax);
                 }
+                
+                bin.Flush();
+                bin.Close();
+
                 Utility.PushColor(ConsoleColor.Green);
                 Console.WriteLine("done");
                 Utility.PopColor();
-                bin.Close();
             }
-            else
+            catch (Exception x)
             {
                 Utility.PushColor(ConsoleColor.Red);
-                Console.WriteLine("Art files missing.");
+                Console.WriteLine("GenBounds Failed: ");
+                Console.WriteLine(x);
                 Utility.PopColor();
             }
         }
